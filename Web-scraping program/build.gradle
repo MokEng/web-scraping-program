@@ -27,7 +27,7 @@ test {
 
 javafx {
     version = "17"
-    modules = [ 'javafx.controls' ]
+    modules = [ 'javafx.controls', 'javafx.web' ]
 }
 
 mainClassName = "se.miun.dt002g.webscraper.gui.GUITest"
