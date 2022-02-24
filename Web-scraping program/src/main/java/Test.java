@@ -1,14 +1,19 @@
-import org.openqa.selenium.*;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Test {
     public static void main(String[] args) throws Exception {
-
+        //----------- Finding the paths ------------------------------------------------
         WebDriver driver;
         driver = new ChromeDriver();
         // go to root page
@@ -22,56 +27,33 @@ public class Test {
         // paths to elements in the linked page
         String articleTitle ="/html/body/main/div[1]/section[1]/article/section/header/h1";
         String articleContent = "/html/body/main/div[1]/section[1]/article/section/p[1]";
+        String urlP2 = "https://www.legaseriea.it/en/press/news?page=2";
+        String urlP3 = "https://www.legaseriea.it/en/press/news?page=3";
+        // -----------------------------------------------------------------------------------
 
-
-        // Get title and content from all articles on page.
-        // One way to do it is with a MultiLinkTask
-
-        // Decorator pattern.
-        Task fetchArticle = new TextTask(driver,articleTitle);
-        fetchArticle = new TextTask(driver,articleContent,fetchArticle);
-        fetchArticle = new BackTask(driver,fetchArticle);
-
-        Task repeatedTask = new MultiLinkTask(driver,fetchArticle,linkXpaths);
-        try{
-            repeatedTask.run(); // run scraper
-        }catch(Exception e ){
-            System.out.println("Error while performing tasks...");
-        }
-        int x = 0;
-        for(Object text : repeatedTask.getData()){
-            x++;
-            System.out.println(text);
-            if(x%2==0){
-                System.out.println("\n");
-            }
-        }
-        // Does same as above but without MultiLinkTask
-        // Can be executed on multiple threads if you use
-        // different drivers.
-        List<Task> allTasks = new ArrayList<>();
-        List<String> data = new ArrayList<>();
+        List<Task> pages = new ArrayList<>();
+        pages.add(null);
+        pages.add(new NavigateTask(driver,urlP2));
+        pages.add(new NavigateTask(driver,urlP3));
         for(String p : linkXpaths){
-            Task t = new ClickTask(driver,p);
-            t = new TextTask(driver,articleTitle,t);
-            t = new TextTask(driver,articleContent,t);
-            t = new BackTask(driver,t);
-            allTasks.add(t);
+            pages = pages.stream().map(t -> new ClickTask(driver,p,t))
+                    .map(t -> new TextTask(driver,articleTitle,t))
+                    .map(t -> new TextTask(driver,articleContent,t))
+                    .map(t -> new BackTask(driver,t)).collect(Collectors.toList());
         }
-
-        for(Task task : allTasks){
-            try{
-                task.run(); // run scraper
-                System.out.println(task.getData()); // present data
-            }catch(Exception e ){
-                System.out.println("Error while performing tasks...");
-            }
-        }
-
-
-
-
         driver.close();
+        String rootUrl = "https://www.legaseriea.it/en/press/news";
+        Sitemap sitemap = new Sitemap(rootUrl);
+        int x = 0;
+        for(Task page : pages){
+            x++;
+            sitemap.addTask("News page #"+x,page);
+        }
+        Instant starts = Instant.now();
+        sitemap.runMultiThreadedScraper(3);
+        Instant ends = Instant.now();
+        sitemap.printCollectedData();
+        System.out.println("\n\nSCRAPER EXECUTION TIME:"+Duration.between(starts, ends).getSeconds()+" SECONDS");
     }
 
     /*

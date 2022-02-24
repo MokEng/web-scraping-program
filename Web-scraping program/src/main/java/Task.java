@@ -25,6 +25,7 @@ abstract class Task {
     abstract void execute() throws  Exception;
     void run() throws Exception {
         if(doFirst!=null){
+            doFirst.setWebDriver(webDriver);
             doFirst.run();
             data.addAll(doFirst.getData());
             doFirst.getData().clear();
@@ -33,6 +34,10 @@ abstract class Task {
     }
     public List<String> getData() {
         return data;
+    }
+
+    public void setWebDriver(WebDriver driver){
+        this.webDriver = driver;
     }
 }
 
@@ -52,7 +57,6 @@ class TextTask extends Task {
     void execute() throws  Exception{
         text = new WebDriverWait(webDriver,5)
                 .until(ExpectedConditions.presenceOfElementLocated(By.xpath(xPathToElement))).getText();
-
         data.add(text);
     }
 
