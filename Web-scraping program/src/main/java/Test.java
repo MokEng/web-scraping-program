@@ -27,14 +27,14 @@ public class Test {
         // paths to elements in the linked page
         String articleTitle ="/html/body/main/div[1]/section[1]/article/section/header/h1";
         String articleContent = "/html/body/main/div[1]/section[1]/article/section/p[1]";
-        String urlP2 = "https://www.legaseriea.it/en/press/news?page=2";
-        String urlP3 = "https://www.legaseriea.it/en/press/news?page=3";
+        String urlP = "https://www.legaseriea.it/en/press/news?page=";
         // -----------------------------------------------------------------------------------
 
         List<Task> pages = new ArrayList<>();
-        pages.add(null);
-        pages.add(new NavigateTask(driver,urlP2));
-        pages.add(new NavigateTask(driver,urlP3));
+        final int nrOfPages = 10;
+        for(int x = 1; x < nrOfPages+1;x++){
+            pages.add(new NavigateTask(driver,urlP+x));
+        }
         for(String p : linkXpaths){
             pages = pages.stream().map(t -> new ClickTask(driver,p,t))
                     .map(t -> new TextTask(driver,articleTitle,t))
@@ -50,7 +50,7 @@ public class Test {
             sitemap.addTask("News page #"+x,page);
         }
         Instant starts = Instant.now();
-        sitemap.runMultiThreadedScraper(3);
+        sitemap.runMultiThreadedScraper(5);
         Instant ends = Instant.now();
         sitemap.printCollectedData();
         System.out.println("\n\nSCRAPER EXECUTION TIME:"+Duration.between(starts, ends).getSeconds()+" SECONDS");

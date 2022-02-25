@@ -36,6 +36,9 @@ public class Sitemap {
     }
 
     public void runMultiThreadedScraper(int nrOfDrivers) throws ExecutionException, InterruptedException {
+        if(nrOfDrivers > tasks.size()){
+            nrOfDrivers = tasks.size();
+        }
         ExecutorService pool = Executors.newFixedThreadPool(nrOfDrivers);
         int tasksPerDriver = tasks.size() / nrOfDrivers;
         int leftOverTasks = tasks.size() % nrOfDrivers;
@@ -63,9 +66,9 @@ public class Sitemap {
             collectedData.addAll(future.get());
         }
         pool.shutdown();
-        for(WebDriver d:drivers){
+        /*for(WebDriver d:drivers){
             d.close();
-        }
+        }*/
         System.out.println("Data scraping is finished.");
     }
 
