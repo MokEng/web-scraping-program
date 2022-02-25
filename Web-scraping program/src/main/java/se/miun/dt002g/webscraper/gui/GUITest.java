@@ -21,9 +21,6 @@ import java.util.*;
 
 public class GUITest extends Application
 {
-	// http://tutorials.jenkov.com/javafx/css-styling.html
-	// https://stackoverflow.com/questions/60081353/running-javafx-project-in-intellij-with-gradle
-
 	private static final String CSS =
 			".selectedNode" +
 			"{" +
@@ -114,7 +111,7 @@ public class GUITest extends Application
 
 				for (int i = 0; i < nodeList.getLength(); i++)
 				{
-					String xPath = getXPath(nodeList.item(i));
+					String xPath = NodeUtilities.getXPath(nodeList.item(i));
 					//list.getItems().add(nodeList.item(i).getTextContent() + " || " + xPath);
 					obsList.add(nodeList.item(i).getTextContent() + " || " + xPath);
 					nodes.put(xPath, nodeList.item(i));
@@ -124,7 +121,6 @@ public class GUITest extends Application
 			}
 			else if (newValue == Worker.State.READY)
 			{
-				//list.getItems().clear();
 				filteredList.getSource().clear();
 			}
 		});
@@ -137,50 +133,7 @@ public class GUITest extends Application
 		stage.show();
 	}
 
-	private static String getXPath(Node node)
-	{
-		StringBuilder builder = new StringBuilder();
-		Stack<String> stack = new Stack<>();
 
-		Node currNode = node;
-		while (currNode.getParentNode() != null)
-		{
-			List<Node> nodeList = filterNodes(currNode.getParentNode().getChildNodes(), currNode.getNodeName());
-			if (nodeList.size() > 1)
-			{
-				for (int i = 0; i < nodeList.size(); i++)
-				{
-					if (currNode.isSameNode(nodeList.get(i)))
-					{
-						stack.push(currNode.getNodeName().toLowerCase() + "[" + (i+1) + "]");
-						break;
-					}
-				}
-			}
-			else stack.push(currNode.getNodeName().toLowerCase());
-
-			currNode = currNode.getParentNode();
-		}
-
-		while (!stack.isEmpty())
-		{
-			builder.append("/").append(stack.pop());
-		}
-
-		return builder.toString();
-	}
-
-	private static List<Node> filterNodes(NodeList list, String name)
-	{
-		List<Node> newList = new ArrayList<>();
-
-		for (int i = 0; i < list.getLength(); i++)
-		{
-			if (list.item(i).getNodeName().equals(name)) newList.add(list.item(i));
-		}
-
-		return newList;
-	}
 
 	public static void main(String[] args)
 	{
