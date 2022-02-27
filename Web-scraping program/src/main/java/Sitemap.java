@@ -4,12 +4,12 @@ import org.openqa.selenium.chrome.ChromeDriver;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 public class Sitemap {
-    private Queue<Pair<String,Task>> tasks = new LinkedList<>();
-    private List<Pair<String, List<String>>> collectedData = new ArrayList<>();
-    private String rootUrl;
+    private final List<Pair<String,Task>> tasks = new ArrayList<>();
+    private final String rootUrl; // all drivers run from Sitemap starts scraping from rootUrl;
     public Sitemap(String rootUrl){
         this.rootUrl = rootUrl;
     }
@@ -17,70 +17,62 @@ public class Sitemap {
     public boolean addTask(String taskId, Task task){
         return tasks.add(new Pair<>(taskId,task));
     }
-    public void runScraper() throws Exception {
-        int fails = 0;
+    public void runScraper(){
         int tot = tasks.size();
-        while(!tasks.isEmpty()){
-            Pair<String,Task> temp = tasks.poll();
-            try{
-
-                temp.second.run();
-                collectedData.add(new Pair<>(temp.first,temp.second.getData()));
-
-            }catch(Exception e){
-                fails++;
-                collectedData.add(new Pair<>(temp.first, null));
+        AtomicInteger fails= new AtomicInteger();
+        WebDriver driver = new ChromeDriver();
+        driver.manage().window().minimize();
+        driver.navigate().to(rootUrl);
+        tasks.forEach(p-> p.second.setWebDriver(driver));//set driver for all tasks
+        tasks.forEach(p-> { // run all tasks in list
+            try {
+                p.second.run();
+            } catch (Exception e) {
+                fails.getAndIncrement();
             }
-        }
-        System.out.println("Number of successful data extractions: "+(tot-fails)+"/"+(tot));
+        });
+        driver.close();
+        System.out.println("Number of successful data extractions: "+(tot- fails.get())+"/"+(tot));
     }
 
     public void runMultiThreadedScraper(int nrOfDrivers) throws ExecutionException, InterruptedException {
         if(nrOfDrivers > tasks.size()){
             nrOfDrivers = tasks.size();
         }
-        ExecutorService pool = Executors.newFixedThreadPool(nrOfDrivers);
+        ExecutorService pool = Executors.newFixedThreadPool(nrOfDrivers); // create thread-pool
         int tasksPerDriver = tasks.size() / nrOfDrivers;
         int leftOverTasks = tasks.size() % nrOfDrivers;
-        Set<Future<List<Pair<String,List<String>>>>> set = new HashSet<>();
-        List<WebDriver> drivers = new ArrayList<>();
-
-        while (!tasks.isEmpty()) {
-            List<Pair<String,Task>> partitionOfTasks = new ArrayList<>();
+        Set<Future<Void>> set = new HashSet<>();
+        int temp = 0;
+        for(int i=0; i < nrOfDrivers;i++){
+            // A part of all tasks to be run by a driver
+            List<Pair<String, Task>> partitionOfTasks = new ArrayList<>(tasks.subList(i * tasksPerDriver + temp, (i + 1) * tasksPerDriver + leftOverTasks));
+            temp = leftOverTasks;
+            // driver to run partitionOfTasks
             WebDriver driver = new ChromeDriver();
             driver.manage().window().minimize();
-            drivers.add(driver);
             driver.navigate().to(rootUrl);
-            for(int x = 0; x < tasksPerDriver+leftOverTasks;x++){
-                Pair<String,Task> temp = tasks.poll();
-                temp.second.setWebDriver(driver);
-                partitionOfTasks.add(temp);
-            }
-            leftOverTasks =0;
-            Callable<List<Pair<String,List<String>>>> callable = new TaskThread(partitionOfTasks);
-            Future<List<Pair<String,List<String>>>> future = pool.submit(callable);
+            partitionOfTasks.forEach(p-> p.second.setWebDriver(driver));
+            Callable<Void> callable = new TaskThread(partitionOfTasks); // new callable for executing tasks
+            Future<Void> future = pool.submit(callable); // submit callable to pool for execution
             set.add(future);
         }
-
-        for (Future<List<Pair<String,List<String>>>> future : set) {
-            collectedData.addAll(future.get());
+        for (Future<Void> future : set) {
+            future.get(); // wait for all threads to finish
         }
-        pool.shutdown();
-        /*for(WebDriver d:drivers){
-            d.close();
-        }*/
+        pool.shutdown(); // destroy thread-pool
         System.out.println("Data scraping is finished.");
     }
-
-    public void printCollectedData(){
-        for(Pair<String,List<String>> pair: collectedData){
+    public void printDataFromTasks(){
+        tasks.forEach(p->{
             Stream.generate(() -> "-").limit(100).forEach(System.out::print);
-            System.out.println("\nID: \n"+pair.first);
-            System.out.println("DATA:");
-            for(String item : pair.second){
-                System.out.println(item);
-            }
-        }
+            System.out.print("\n");
+            System.out.println(p.first);
+            p.second.getData().forEach(System.out::println);
+        });
+    }
+    public void clearDataFromTasks(){
+        tasks.forEach(p->p.second.getData().clear());
     }
 
 }

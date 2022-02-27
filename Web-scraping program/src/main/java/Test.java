@@ -31,7 +31,7 @@ public class Test {
         // -----------------------------------------------------------------------------------
 
         List<Task> pages = new ArrayList<>();
-        final int nrOfPages = 10;
+        final int nrOfPages = 5;
         for(int x = 1; x < nrOfPages+1;x++){
             pages.add(new NavigateTask(driver,urlP+x));
         }
@@ -50,10 +50,13 @@ public class Test {
             sitemap.addTask("News page #"+x,page);
         }
         Instant starts = Instant.now();
-        sitemap.runMultiThreadedScraper(5);
+        sitemap.runMultiThreadedScraper(2);
         Instant ends = Instant.now();
-        sitemap.printCollectedData();
-        System.out.println("\n\nSCRAPER EXECUTION TIME:"+Duration.between(starts, ends).getSeconds()+" SECONDS");
+        sitemap.printDataFromTasks();
+        System.out.println(Duration.between(starts, ends));
+        sitemap.clearDataFromTasks();
+        sitemap.runScraper();
+        sitemap.printDataFromTasks();
     }
 
     /*
