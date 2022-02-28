@@ -1,11 +1,11 @@
-
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
 
 public class Sitemap {
     private final List<Pair<String,Task>> tasks = new ArrayList<>();
@@ -14,25 +14,19 @@ public class Sitemap {
         this.rootUrl = rootUrl;
     }
 
-    public boolean addTask(String taskId, Task task){
-        return tasks.add(new Pair<>(taskId,task));
+    public boolean addTask(String groupId, Task task){
+        return tasks.add(new Pair<>(groupId,task));
     }
     public void runScraper(){
-        int tot = tasks.size();
-        AtomicInteger fails= new AtomicInteger();
         WebDriver driver = new ChromeDriver();
         driver.manage().window().minimize();
         driver.navigate().to(rootUrl);
         tasks.forEach(p-> p.second.setWebDriver(driver));//set driver for all tasks
         tasks.forEach(p-> { // run all tasks in list
-            try {
-                p.second.run();
-            } catch (Exception e) {
-                fails.getAndIncrement();
-            }
+            p.second.run();
         });
         driver.close();
-        System.out.println("Number of successful data extractions: "+(tot- fails.get())+"/"+(tot));
+        System.out.println("Data scraping is finished.");
     }
 
     public void runMultiThreadedScraper(int nrOfDrivers) throws ExecutionException, InterruptedException {
@@ -63,21 +57,7 @@ public class Sitemap {
         pool.shutdown(); // destroy thread-pool
         System.out.println("Data scraping is finished.");
     }
-    public void printDataFromTasks(){
-        tasks.forEach(p->{
-            Stream.generate(() -> "-").limit(100).forEach(System.out::print);
-            System.out.print("\n");
-            System.out.println(p.first);
-            p.second.getDataFromAllTasks().forEach(System.out::println);
-        });
-    }
-    public void printDataFromTaskId(String taskId){
-        tasks.forEach(p->{
-            Stream.generate(() -> "-").limit(100).forEach(System.out::print);
-            System.out.print("\n");
-            p.second.getAllDataWithId(taskId).forEach(System.out::println);
-        });
-    }
+
     public void clearDataFromTasks(){
         tasks.forEach(p->p.second.clearDataFromAllTasks());
     }

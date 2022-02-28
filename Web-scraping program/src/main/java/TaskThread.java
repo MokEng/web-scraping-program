@@ -8,7 +8,7 @@ class TaskThread implements Callable<Void> {
     }
 
     @Override
-    public Void call() throws Exception {
+    public Void call() {
         for(Pair<String,Task> task: tasks){
             task.second.run();
         }

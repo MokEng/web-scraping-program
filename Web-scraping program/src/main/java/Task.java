@@ -15,6 +15,7 @@ abstract class Task {
     public Task doFirst=null;
     List<String> data= new ArrayList<>();
     public String id;
+    public Exception exception;
     // Constructors
     public Task(WebDriver driver,String id) {
           webDriver = driver;
@@ -27,12 +28,16 @@ abstract class Task {
     }
     // Member-functions
     abstract void execute() throws  Exception;
-    void run() throws Exception {
+    void run() {
         if(doFirst!=null){
             doFirst.setWebDriver(webDriver);
             doFirst.run();
         }
-        execute();
+        try{
+            execute();
+        }catch(Exception e){
+            exception =e;
+        }
     }
     public List<String> getData() {
         return data;
@@ -64,6 +69,18 @@ abstract class Task {
             temp = temp.doFirst;
         }
         return allData;
+    }
+
+    public List<Pair<String, Exception>> getFailedTasks(){
+        Task temp = this;
+        List<Pair<String,Exception>> pairList=new ArrayList<>();
+        while (temp != null) {
+            if(temp.exception !=null){
+                pairList.add(Pair.of(temp.id,temp.exception));
+            }
+            temp = temp.doFirst;
+        }
+        return pairList;
     }
 
     public void setWebDriver(WebDriver driver){

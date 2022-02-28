@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Test {
     public static void main(String[] args) throws Exception {
@@ -33,7 +34,13 @@ public class Test {
         List<Task> pages = new ArrayList<>();
         final int nrOfPages = 5;
         for(int x = 1; x < nrOfPages+1;x++){
+            if(x==1) { // this will create an exception
+                pages.add(new NavigateTask(driver, "not a valid url", "pager"));
+                continue;
+            }
             pages.add(new NavigateTask(driver,urlP+x,"pager"));
+
+
         }
         for(String p : linkXpaths){
             pages = pages.stream().map(t -> new ClickTask(driver,p,t,"click"))
@@ -50,11 +57,30 @@ public class Test {
             sitemap.addTask("News page #"+x,page); // add task + id for each
         }
         Instant starts = Instant.now();
-        sitemap.runMultiThreadedScraper(2);
+        sitemap.runMultiThreadedScraper(2); // run scraper(s)
         Instant ends = Instant.now();
-        sitemap.printDataFromTasks(); // just print all data fetched from all tasks
-        System.out.println(Duration.between(starts, ends));
-        linkXpaths.forEach(sitemap::printDataFromTaskId); // print data from tasks with same id together
+        System.out.println("TIME: "+Duration.between(starts, ends).getSeconds()+" SECONDS");
+        // ----------- Data handling -----------
+        if(!sitemap.getTasks().stream().filter(p->p.second.getFailedTasks().size()>0) // if any exceptions has been caught
+                .toList().isEmpty()){
+            System.out.println("--------- EXCEPTIONS WHILE RUNNING SCRAPER ----------");
+            // print all exception messages from tasks
+            sitemap.getTasks().stream().map(p->p.second.getFailedTasks())
+                    .toList().forEach(l-> l.forEach(p->{
+                        System.out.println("Task id: "+p.first);
+                        System.out.println("Error message: "+p.second.getMessage());
+                    }));
+            return; // Don't print any data since the sitemap is broken.
+        }
+        // group and print data from tasks with same id together
+        linkXpaths.forEach(s->{
+            sitemap.getTasks().forEach(p->{
+                Stream.generate(() -> "-").limit(100).forEach(System.out::print);
+                System.out.print("\n");
+                p.second.getAllDataWithId(s).forEach(System.out::println);
+            });
+        });
+
     }
 
     /*
