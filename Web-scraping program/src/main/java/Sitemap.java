@@ -71,6 +71,13 @@ public class Sitemap {
             p.second.getDataFromAllTasks().forEach(System.out::println);
         });
     }
+    public void printDataFromTaskId(String taskId){
+        tasks.forEach(p->{
+            Stream.generate(() -> "-").limit(100).forEach(System.out::print);
+            System.out.print("\n");
+            p.second.getAllDataWithId(taskId).forEach(System.out::println);
+        });
+    }
     public void clearDataFromTasks(){
         tasks.forEach(p->p.second.clearDataFromAllTasks());
     }

@@ -17,7 +17,7 @@ public class Test {
         WebDriver driver;
         driver = new ChromeDriver();
         // go to root page
-        Task nav = new NavigateTask(driver,"https://www.legaseriea.it/en/press/news");
+        Task nav = new NavigateTask(driver,"https://www.legaseriea.it/en/press/news","nav");
         nav.run();
 
         WebElement wrapper = driver.findElement(By.xpath("/html/body/main/div[1]/section[1]"));
@@ -33,13 +33,13 @@ public class Test {
         List<Task> pages = new ArrayList<>();
         final int nrOfPages = 5;
         for(int x = 1; x < nrOfPages+1;x++){
-            pages.add(new NavigateTask(driver,urlP+x));
+            pages.add(new NavigateTask(driver,urlP+x,"pager"));
         }
         for(String p : linkXpaths){
-            pages = pages.stream().map(t -> new ClickTask(driver,p,t))
-                    .map(t -> new TextTask(driver,articleTitle,t))
-                    .map(t -> new TextTask(driver,articleContent,t))
-                    .map(t -> new BackTask(driver,t)).collect(Collectors.toList());
+            pages = pages.stream().map(t -> new ClickTask(driver,p,t,"click"))
+                    .map(t -> new TextTask(driver,articleTitle,t,p))
+                    .map(t -> new TextTask(driver,articleContent,t,p))
+                    .map(t -> new BackTask(driver,t,"return")).collect(Collectors.toList());
         }
         driver.close();
         String rootUrl = "https://www.legaseriea.it/en/press/news";
@@ -47,16 +47,14 @@ public class Test {
         int x = 0;
         for(Task page : pages){
             x++;
-            sitemap.addTask("News page #"+x,page);
+            sitemap.addTask("News page #"+x,page); // add task + id for each
         }
         Instant starts = Instant.now();
         sitemap.runMultiThreadedScraper(2);
         Instant ends = Instant.now();
-        sitemap.printDataFromTasks();
+        sitemap.printDataFromTasks(); // just print all data fetched from all tasks
         System.out.println(Duration.between(starts, ends));
-        sitemap.clearDataFromTasks();
-        sitemap.runScraper();
-        sitemap.printDataFromTasks();
+        linkXpaths.forEach(sitemap::printDataFromTaskId); // print data from tasks with same id together
     }
 
     /*
