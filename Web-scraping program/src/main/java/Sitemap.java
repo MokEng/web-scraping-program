@@ -68,11 +68,14 @@ public class Sitemap {
             Stream.generate(() -> "-").limit(100).forEach(System.out::print);
             System.out.print("\n");
             System.out.println(p.first);
-            p.second.getData().forEach(System.out::println);
+            p.second.getDataFromAllTasks().forEach(System.out::println);
         });
     }
     public void clearDataFromTasks(){
-        tasks.forEach(p->p.second.getData().clear());
+        tasks.forEach(p->p.second.clearDataFromAllTasks());
+    }
+    public List<Pair<String, Task>> getTasks(){
+        return tasks;
     }
 
 }

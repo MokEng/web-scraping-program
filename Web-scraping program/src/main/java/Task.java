@@ -27,13 +27,35 @@ abstract class Task {
         if(doFirst!=null){
             doFirst.setWebDriver(webDriver);
             doFirst.run();
-            data.addAll(doFirst.getData());
-            doFirst.getData().clear();
+            //data.addAll(doFirst.getData());
+            //doFirst.getData().clear();
         }
         execute();
     }
     public List<String> getData() {
         return data;
+    }
+    public List<String> getDataFromAllTasks(){
+        List<String> allData= new ArrayList<>();
+        Task temp = this;
+        while(true){
+            if(temp == null){
+                break;
+            }
+            allData.addAll(temp.getData());
+            temp = temp.doFirst;
+        }
+        return allData;
+    }
+    public void clearDataFromAllTasks(){
+        Task temp = this;
+        while(true){
+            if(temp == null){
+                break;
+            }
+            temp.getData().clear();
+            temp = temp.doFirst;
+        }
     }
 
     public void setWebDriver(WebDriver driver){
@@ -59,6 +81,7 @@ class TextTask extends Task {
                 .until(ExpectedConditions.presenceOfElementLocated(By.xpath(xPathToElement))).getText();
         data.add(text);
     }
+
 
 }
 
