@@ -14,8 +14,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import org.w3c.dom.*;
-import org.w3c.dom.events.EventListener;
-import org.w3c.dom.events.EventTarget;
 import org.w3c.dom.html.HTMLElement;
 
 public class GUITest extends Application
@@ -73,6 +71,13 @@ public class GUITest extends Application
 		typeChoice.setStyle("-fx-pref-width: 100;");
 
 		ToggleButton selectButton = new ToggleButton("Select Element");
+		selectButton.selectedProperty().addListener((observable, oldValue, newValue) ->
+		{
+			if (!newValue && selectedNode != null)
+			{
+				((HTMLElement)selectedNode).setClassName(selectedNodePreviousClass);
+			}
+		});
 
 		Label colorLabel = new Label("Selection Color ");
 		ColorPicker colorPicker = new ColorPicker();
@@ -113,7 +118,7 @@ public class GUITest extends Application
 					obsList.add(nodeList.item(i).getTextContent() + " || " + xPath);
 					//nodes.put(xPath, nodeList.item(i));
 
-					addOnclick(nodeList.item(i), evt ->
+					NodeUtilities.addOnclick(nodeList.item(i), evt ->
 					{
 						if (selectButton.isSelected())
 						{
@@ -138,17 +143,14 @@ public class GUITest extends Application
 			}
 		});
 
-		SplitPane splitPane = new SplitPane();
-		splitPane.getItems().addAll(vBox, selectionPane);
-		Scene scene = new Scene(splitPane, 1500, 900);
+		//SplitPane splitPane = new SplitPane();
+		//splitPane.getItems().addAll(vBox, selectionPane);
+		//splitPane.getItems().addAll(vBox, new TaskController());
+		//Scene scene = new Scene(splitPane, 1500, 900);
+		Scene scene = new Scene(new SitemapController(), 600, 400);
 
 		stage.setScene(scene);
 		stage.show();
-	}
-
-	private static void addOnclick(Node node, EventListener listener)
-	{
-		((EventTarget)node).addEventListener("click", listener, true);
 	}
 
 	public static void main(String[] args)

@@ -2,6 +2,8 @@ package se.miun.dt002g.webscraper.gui;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.events.EventListener;
+import org.w3c.dom.events.EventTarget;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,5 +54,10 @@ public class NodeUtilities
 		}
 
 		return newList;
+	}
+
+	public static void addOnclick(Node node, EventListener listener)
+	{
+		((EventTarget)node).addEventListener("click", listener, true);
 	}
 }
