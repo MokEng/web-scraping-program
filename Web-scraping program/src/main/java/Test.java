@@ -5,6 +5,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 
+import java.io.*;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -14,12 +15,13 @@ import java.util.stream.Stream;
 
 public class Test {
     public static void main(String[] args) throws Exception {
+        /*
         //----------- Finding the paths ------------------------------------------------
         WebDriver driver;
         driver = new ChromeDriver();
         // go to root page
-        Task nav = new NavigateTask(driver,"https://www.legaseriea.it/en/press/news","nav");
-        nav.run();
+        Task nav = new NavigateTask("https://www.legaseriea.it/en/press/news","nav");
+        nav.run(driver);
 
         WebElement wrapper = driver.findElement(By.xpath("/html/body/main/div[1]/section[1]"));
         List<WebElement> elems = wrapper.findElements(By.tagName("a"));
@@ -29,26 +31,20 @@ public class Test {
         String articleTitle ="/html/body/main/div[1]/section[1]/article/section/header/h1";
         String articleContent = "/html/body/main/div[1]/section[1]/article/section/p[1]";
         String urlP = "https://www.legaseriea.it/en/press/news?page=";
+        driver.close();
         // -----------------------------------------------------------------------------------
 
         List<Task> pages = new ArrayList<>();
         final int nrOfPages = 5;
         for(int x = 1; x < nrOfPages+1;x++){
-            if(x==1) { // this will create an exception
-                pages.add(new NavigateTask(driver, "not a valid url", "pager"));
-                continue;
-            }
-            pages.add(new NavigateTask(driver,urlP+x,"pager"));
-
-
+            pages.add(new NavigateTask(urlP+x,"pager"));
         }
         for(String p : linkXpaths){
-            pages = pages.stream().map(t -> new ClickTask(driver,p,t,"click"))
-                    .map(t -> new TextTask(driver,articleTitle,t,p))
-                    .map(t -> new TextTask(driver,articleContent,t,p))
-                    .map(t -> new BackTask(driver,t,"return")).collect(Collectors.toList());
+            pages = pages.stream().map(t -> new ClickTask(p,t,"click"))
+                    .map(t -> new TextTask(articleTitle,t,"articletitle"))
+                    .map(t -> new TextTask(articleContent,t,"articlecontent"))
+                    .map(t -> new BackTask(t,"return")).collect(Collectors.toList());
         }
-        driver.close();
         String rootUrl = "https://www.legaseriea.it/en/press/news";
         Sitemap sitemap = new Sitemap(rootUrl);
         int x = 0;
@@ -56,6 +52,7 @@ public class Test {
             x++;
             sitemap.addTask("News page #"+x,page); // add task + id for each
         }
+
         Instant starts = Instant.now();
         sitemap.runMultiThreadedScraper(2); // run scraper(s)
         Instant ends = Instant.now();
@@ -73,12 +70,43 @@ public class Test {
             return; // Don't print any data since the sitemap is broken.
         }
         // group and print data from tasks with same id together
-        linkXpaths.forEach(s->{
-            sitemap.getTasks().forEach(p->{
-                Stream.generate(() -> "-").limit(100).forEach(System.out::print);
-                System.out.print("\n");
-                p.second.getAllDataWithId(s).forEach(System.out::println);
-            });
+        sitemap.getTasks().forEach(p->{
+            Stream.generate(() -> "-").limit(100).forEach(System.out::print);
+            System.out.print("\n");
+            p.second.getAllDataWithId("articletitle").forEach(System.out::println);
+        });
+        sitemap.getTasks().forEach(p->{
+            Stream.generate(() -> "-").limit(100).forEach(System.out::print);
+            System.out.print("\n");
+            p.second.getAllDataWithId("articlecontent").forEach(System.out::println);
+        });
+
+
+        String resources = System.getProperty("user.dir")+"/Web-scraping program/src/main/resources/";
+        FileOutputStream fout = new FileOutputStream(resources+"sitemap");
+        ObjectOutputStream oos = new ObjectOutputStream(fout);
+        oos.writeObject(sitemap);
+        oos.flush();
+        oos.close();
+
+        */
+
+        String resources = System.getProperty("user.dir")+"/Web-scraping program/src/main/resources/";
+        FileInputStream fi = new FileInputStream(resources+"sitemap");
+        ObjectInputStream ois = new ObjectInputStream(fi);
+        // recreate sitemap from file
+        Sitemap s = (Sitemap) ois.readObject();
+        s.runMultiThreadedScraper(2); // run sitemap
+        // Print data
+        s.getTasks().forEach(p->{
+            Stream.generate(() -> "-").limit(100).forEach(System.out::print);
+            System.out.print("\n");
+            p.second.getAllDataWithId("articletitle").forEach(System.out::println);
+        });
+        s.getTasks().forEach(p->{
+            Stream.generate(() -> "-").limit(100).forEach(System.out::print);
+            System.out.print("\n");
+            p.second.getAllDataWithId("articlecontent").forEach(System.out::println);
         });
 
     }

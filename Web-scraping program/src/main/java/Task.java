@@ -5,36 +5,33 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-abstract class Task {
+abstract class Task implements Serializable {
     // Data-members
-    public WebDriver webDriver;
     public Task doFirst=null;
     List<String> data= new ArrayList<>();
     public String id;
     public Exception exception;
     // Constructors
-    public Task(WebDriver driver,String id) {
-          webDriver = driver;
+    public Task(String id) {
           this.id = id;
     }
-    public Task(WebDriver driver,Task doFirst,String id) {
-        webDriver = driver;
+    public Task(Task doFirst,String id) {
         this.doFirst = doFirst;
         this.id = id;
     }
     // Member-functions
-    abstract void execute() throws  Exception;
-    void run() {
+    abstract void execute(WebDriver driver) throws  Exception;
+    void run(WebDriver driver) {
         if(doFirst!=null){
-            doFirst.setWebDriver(webDriver);
-            doFirst.run();
+            doFirst.run(driver);
         }
         try{
-            execute();
+            execute(driver);
         }catch(Exception e){
             exception =e;
         }
@@ -82,27 +79,23 @@ abstract class Task {
         }
         return pairList;
     }
-
-    public void setWebDriver(WebDriver driver){
-        this.webDriver = driver;
-    }
 }
 
 class TextTask extends Task {
     private String xPathToElement;
     String text;
-    public TextTask(WebDriver driver,String xPathToElement,String id) {
-        super(driver,id);
+    public TextTask(String xPathToElement,String id) {
+        super(id);
         this.xPathToElement = xPathToElement;
     }
-    public TextTask(WebDriver driver, String xPathToElement, Task doFirst,String id){
-        super(driver,doFirst,id);
+    public TextTask(String xPathToElement, Task doFirst,String id){
+        super(doFirst,id);
         this.xPathToElement = xPathToElement;
     }
 
     @Override
-    void execute() throws  Exception{
-        text = new WebDriverWait(webDriver,5)
+    void execute(WebDriver driver) throws  Exception{
+        text = new WebDriverWait(driver,5)
                 .until(ExpectedConditions.presenceOfElementLocated(By.xpath(xPathToElement))).getText();
         data.add(text);
     }
@@ -112,19 +105,19 @@ class TextTask extends Task {
 
 class ClickTask extends Task{
     private String xPathToElement;
-    public ClickTask(WebDriver driver, String xPathToElement,String id) {
-        super(driver,id);
+    public ClickTask(String xPathToElement,String id) {
+        super(id);
         this.xPathToElement = xPathToElement;
     }
-    public ClickTask(WebDriver driver, String xPathToElement, Task doFirst,String id){
-        super(driver, doFirst,id);
+    public ClickTask(String xPathToElement, Task doFirst,String id){
+        super(doFirst,id);
         this.xPathToElement = xPathToElement;
     }
 
     @Override
-    void execute() throws Exception {
-        JavascriptExecutor js = (JavascriptExecutor) webDriver;
-        WebElement element = new WebDriverWait(webDriver,5)
+    void execute(WebDriver driver) throws Exception {
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        WebElement element = new WebDriverWait(driver,5)
                 .until(ExpectedConditions.presenceOfElementLocated(By.xpath(xPathToElement)));
         js.executeScript("arguments[0].click();",element);
     }
@@ -132,16 +125,16 @@ class ClickTask extends Task{
 
 class BackTask extends Task{
 
-    public BackTask(WebDriver driver,String id) {
-        super(driver,id);
+    public BackTask(String id) {
+        super(id);
     }
-    public BackTask(WebDriver driver, Task doFirst,String id){
-        super(driver, doFirst,id);
+    public BackTask(Task doFirst,String id){
+        super(doFirst,id);
     }
 
     @Override
-    void execute() throws Exception {
-        webDriver.navigate().back();
+    void execute(WebDriver driver) throws Exception {
+        driver.navigate().back();
     }
 }
 
@@ -149,17 +142,17 @@ class BackTask extends Task{
 
 class NavigateTask extends Task{
     String url;
-    public NavigateTask(WebDriver driver, String url,String id) {
-        super(driver,id);
+    public NavigateTask(String url,String id) {
+        super(id);
         this.url = url;
     }
-    public NavigateTask(WebDriver driver, String url, Task doFirst,String id){
-        super(driver, doFirst,id);
+    public NavigateTask(String url, Task doFirst,String id){
+        super(doFirst,id);
         this.url = url;
     }
 
     @Override
-    void execute() throws Exception {
-        webDriver.navigate().to(url);
+    void execute(WebDriver driver) throws Exception {
+        driver.navigate().to(url);
     }
 }

@@ -1,13 +1,14 @@
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
 
-public class Sitemap {
+public class Sitemap implements Serializable {
     private final List<Pair<String,Task>> tasks = new ArrayList<>();
     private final String rootUrl; // all drivers run from Sitemap starts scraping from rootUrl;
     public Sitemap(String rootUrl){
@@ -21,9 +22,9 @@ public class Sitemap {
         WebDriver driver = new ChromeDriver();
         driver.manage().window().minimize();
         driver.navigate().to(rootUrl);
-        tasks.forEach(p-> p.second.setWebDriver(driver));//set driver for all tasks
+        //tasks.forEach(p-> p.second.setWebDriver(driver));//set driver for all tasks
         tasks.forEach(p-> { // run all tasks in list
-            p.second.run();
+            p.second.run(driver);
         });
         driver.close();
         System.out.println("Data scraping is finished.");
@@ -46,8 +47,8 @@ public class Sitemap {
             WebDriver driver = new ChromeDriver();
             driver.manage().window().minimize();
             driver.navigate().to(rootUrl);
-            partitionOfTasks.forEach(p-> p.second.setWebDriver(driver));
-            Callable<Void> callable = new TaskThread(partitionOfTasks); // new callable for executing tasks
+            //partitionOfTasks.forEach(p-> p.second.setWebDriver(driver));
+            Callable<Void> callable = new TaskThread(partitionOfTasks,driver); // new callable for executing tasks
             Future<Void> future = pool.submit(callable); // submit callable to pool for execution
             set.add(future);
         }

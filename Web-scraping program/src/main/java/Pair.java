@@ -1,4 +1,6 @@
-public final class Pair<T, S> {
+import java.io.Serializable;
+
+public final class Pair<T, S> implements Serializable {
     public final T first;
     public final S second;
 
