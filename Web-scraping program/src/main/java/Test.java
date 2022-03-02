@@ -5,20 +5,14 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 
-import java.io.*;
-import java.nio.file.Path;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Test {
     public static void main(String[] args) throws Exception {
-        /*
+
         //----------- Finding the paths ------------------------------------------------
         WebDriver driver;
         driver = new ChromeDriver();
@@ -42,48 +36,35 @@ public class Test {
         for(int x = 1; x < nrOfPages+1;x++){
             pages.add(new NavigateTask(urlP+x,"pager"));
         }
+        AtomicInteger x = new AtomicInteger(0);
         for(String p : linkXpaths){
             pages = pages.stream().map(t -> new ClickTask(p,t,"click"))
-                    .map(t -> new TextTask(articleTitle,t,"articletitle"))
-                    .map(t -> new TextTask(articleContent,t,"articlecontent"))
+                    .map(t -> new TextTask(articleTitle,t,String.valueOf(x.incrementAndGet()),"title"))
+                    .map(t -> new TextTask(articleContent,t,String.valueOf(x.get()),"content"))
                     .map(t -> new BackTask(t,"return")).collect(Collectors.toList());
+
         }
         String rootUrl = "https://www.legaseriea.it/en/press/news";
-        Sitemap sitemap = new Sitemap(rootUrl,"BROKEN5PagesNews");
-        int x = 0;
-        for(Task page : pages){
-            x++;
-            sitemap.addTask("News page #"+x,page); // add task + id for each
-        }
-        */
+        Sitemap sitemap = new Sitemap(rootUrl,"5PagesNews");
+        pages.forEach(sitemap::addTask);
 
         String resourcesDir = System.getProperty("user.dir")+"/Web-scraping program/src/main/resources/";
 
-        List<Path> failed = new ArrayList<>();
-        List<Sitemap> sitemaps= SitemapHandler.loadSitemaps(resourcesDir,failed);
-        failed.forEach(path -> System.out.println(path.toString()));
-        sitemaps.stream().filter(s-> Objects.equals(s.getName(), "5PagesNews")).
-                forEach(sm -> {
-                    try {
-                        Instant starts = Instant.now();
-                        sm.runMultiThreadedScraper(2); // run scraper(s)
-                        Instant ends = Instant.now();
-                        System.out.println("TIME: "+Duration.between(starts, ends).getSeconds()+" SECONDS");
+        sitemap.runMultiThreadedScraper(2);
+        // Print data grouped by the DataHandler
+        System.out.println("Data grouped by id:\n\n");
+        DataHandler.groupTextTasksBy(GROUPBY.id,sitemap).forEach(m-> m.keySet().forEach(k->{
+            System.out.println("\n\nID : "+k+"\n");
+            m.get(k).forEach(t->System.out.println(t.dataName+":\n"+t.data));
+        }));
+        System.out.println("\n\nData grouped by name:\n\n");
+        DataHandler.groupTextTasksBy(GROUPBY.dataName,sitemap).forEach(m-> m.keySet().forEach(k->{
+            System.out.println("DATANAME : "+k+"\n");
+            m.get(k).forEach(t->System.out.println(t.data+"\n"));
+        }));
 
-                    } catch (ExecutionException | InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    sm.getTasks().forEach(p->{
-                        Stream.generate(() -> "-").limit(100).forEach(System.out::print);
-                        System.out.print("\n");
-                        p.second.getAllDataWithId("articletitle").forEach(System.out::println);
-                    });
-                    sm.getTasks().forEach(p->{
-                        Stream.generate(() -> "-").limit(100).forEach(System.out::print);
-                        System.out.print("\n");
-                        p.second.getAllDataWithId("articlecontent").forEach(System.out::println);
-                    });
-                });
+
+
     }
 
     /*

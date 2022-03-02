@@ -6,16 +6,17 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
+/**
+ * Abstract class for representing a web-scraping Task.
+ * Tasks can be combined in a decorator design-pattern.
+ */
 abstract class Task implements Serializable {
     // Data-members
-    public Task doFirst=null;
-    List<String> data= new ArrayList<>();
-    public String id;
-    public Exception exception;
+    private Task doFirst=null;
+    protected String id;
+    protected Exception exception;
     // Constructors
     public Task(String id) {
           this.id = id;
@@ -25,7 +26,13 @@ abstract class Task implements Serializable {
         this.id = id;
     }
     // Member-functions
-    abstract void execute(WebDriver driver) throws  Exception;
+    abstract void execute(WebDriver driver) throws  Exception; // what should this specific task do
+
+    /**
+     * Runs all Tasks in the chain
+     * then execute the job of this Task.
+     * @param driver used to crawl the web
+     */
     void run(WebDriver driver) {
         if(doFirst!=null){
             doFirst.run(driver);
@@ -33,78 +40,48 @@ abstract class Task implements Serializable {
         try{
             execute(driver);
         }catch(Exception e){
-            exception =e;
+            exception = e; // save exception
         }
     }
-    public List<String> getData() {
-        return data;
-    }
-    public List<String> getDataFromAllTasks(){
-        List<String> allData= new ArrayList<>();
-        Task temp = this;
-        while (temp != null) {
-            allData.addAll(temp.getData());
-            temp = temp.doFirst;
-        }
-        return allData;
-    }
-    public void clearDataFromAllTasks(){
-        Task temp = this;
-        while (temp != null) {
-            temp.getData().clear();
-            temp = temp.doFirst;
-        }
-    }
-
-    public List<String> getAllDataWithId(String id){
-        Task temp = this;
-        List<String> allData= new ArrayList<>();
-        while (temp != null) {
-            if (Objects.equals(temp.id, id)) {
-                allData.addAll(temp.getData());
-            }
-            temp = temp.doFirst;
-        }
-        return allData;
-    }
-
-    public List<Pair<String, Exception>> getFailedTasks(){
-        Task temp = this;
-        List<Pair<String,Exception>> pairList=new ArrayList<>();
-        while (temp != null) {
-            if(temp.exception !=null){
-                pairList.add(Pair.of(temp.id,temp.exception));
-            }
-            temp = temp.doFirst;
-        }
-        return pairList;
+    public Task getDoFirst(){
+        return doFirst;
     }
 }
 
+/**
+ * Task for extracting data in form of text from the web.
+ */
 class TextTask extends Task {
-    private String xPathToElement;
-    String text;
-    public TextTask(String xPathToElement,String id) {
+    private final String xPathToElement; // path to the element which inner HTML should be scraped.
+    String data; // the extracted data
+    String dataName; // key to find the data;
+    public TextTask(String xPathToElement,String id,String dataName) {
         super(id);
         this.xPathToElement = xPathToElement;
+        this.dataName=dataName;
     }
-    public TextTask(String xPathToElement, Task doFirst,String id){
+    public TextTask(String xPathToElement, Task doFirst,String id,String dataName){
         super(doFirst,id);
         this.xPathToElement = xPathToElement;
+        this.dataName = dataName;
     }
 
     @Override
     void execute(WebDriver driver) throws  Exception{
-        text = new WebDriverWait(driver,5)
+        // get inner html of the element
+        data = new WebDriverWait(driver,5)
                 .until(ExpectedConditions.presenceOfElementLocated(By.xpath(xPathToElement))).getText();
-        data.add(text);
+
     }
 
 
 }
 
+/**
+ * Task for clicking an element in a web-page.
+ */
 class ClickTask extends Task{
-    private String xPathToElement;
+    private String xPathToElement; // path to the element which should be clicked
     public ClickTask(String xPathToElement,String id) {
         super(id);
         this.xPathToElement = xPathToElement;
@@ -116,6 +93,7 @@ class ClickTask extends Task{
 
     @Override
     void execute(WebDriver driver) throws Exception {
+        // Use javascript to click an element on the current webpage
         JavascriptExecutor js = (JavascriptExecutor) driver;
         WebElement element = new WebDriverWait(driver,5)
                 .until(ExpectedConditions.presenceOfElementLocated(By.xpath(xPathToElement)));
@@ -123,6 +101,9 @@ class ClickTask extends Task{
     }
 }
 
+/**
+ * Task for ordering a web-window to go back to last visited page.
+ */
 class BackTask extends Task{
 
     public BackTask(String id) {
@@ -139,7 +120,9 @@ class BackTask extends Task{
 }
 
 
-
+/**
+ * Task for navigating a webdriver to a new url
+ */
 class NavigateTask extends Task{
     String url;
     public NavigateTask(String url,String id) {
