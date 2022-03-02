@@ -6,10 +6,13 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 import java.io.*;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -46,69 +49,41 @@ public class Test {
                     .map(t -> new BackTask(t,"return")).collect(Collectors.toList());
         }
         String rootUrl = "https://www.legaseriea.it/en/press/news";
-        Sitemap sitemap = new Sitemap(rootUrl);
+        Sitemap sitemap = new Sitemap(rootUrl,"BROKEN5PagesNews");
         int x = 0;
         for(Task page : pages){
             x++;
             sitemap.addTask("News page #"+x,page); // add task + id for each
         }
-
-        Instant starts = Instant.now();
-        sitemap.runMultiThreadedScraper(2); // run scraper(s)
-        Instant ends = Instant.now();
-        System.out.println("TIME: "+Duration.between(starts, ends).getSeconds()+" SECONDS");
-        // ----------- Data handling -----------
-        if(!sitemap.getTasks().stream().filter(p->p.second.getFailedTasks().size()>0) // if any exceptions has been caught
-                .toList().isEmpty()){
-            System.out.println("--------- EXCEPTIONS WHILE RUNNING SCRAPER ----------");
-            // print all exception messages from tasks
-            sitemap.getTasks().stream().map(p->p.second.getFailedTasks())
-                    .toList().forEach(l-> l.forEach(p->{
-                        System.out.println("Task id: "+p.first);
-                        System.out.println("Error message: "+p.second.getMessage());
-                    }));
-            return; // Don't print any data since the sitemap is broken.
-        }
-        // group and print data from tasks with same id together
-        sitemap.getTasks().forEach(p->{
-            Stream.generate(() -> "-").limit(100).forEach(System.out::print);
-            System.out.print("\n");
-            p.second.getAllDataWithId("articletitle").forEach(System.out::println);
-        });
-        sitemap.getTasks().forEach(p->{
-            Stream.generate(() -> "-").limit(100).forEach(System.out::print);
-            System.out.print("\n");
-            p.second.getAllDataWithId("articlecontent").forEach(System.out::println);
-        });
-
-
-        String resources = System.getProperty("user.dir")+"/Web-scraping program/src/main/resources/";
-        FileOutputStream fout = new FileOutputStream(resources+"sitemap");
-        ObjectOutputStream oos = new ObjectOutputStream(fout);
-        oos.writeObject(sitemap);
-        oos.flush();
-        oos.close();
-
         */
 
-        String resources = System.getProperty("user.dir")+"/Web-scraping program/src/main/resources/";
-        FileInputStream fi = new FileInputStream(resources+"sitemap");
-        ObjectInputStream ois = new ObjectInputStream(fi);
-        // recreate sitemap from file
-        Sitemap s = (Sitemap) ois.readObject();
-        s.runMultiThreadedScraper(2); // run sitemap
-        // Print data
-        s.getTasks().forEach(p->{
-            Stream.generate(() -> "-").limit(100).forEach(System.out::print);
-            System.out.print("\n");
-            p.second.getAllDataWithId("articletitle").forEach(System.out::println);
-        });
-        s.getTasks().forEach(p->{
-            Stream.generate(() -> "-").limit(100).forEach(System.out::print);
-            System.out.print("\n");
-            p.second.getAllDataWithId("articlecontent").forEach(System.out::println);
-        });
+        String resourcesDir = System.getProperty("user.dir")+"/Web-scraping program/src/main/resources/";
 
+        List<Path> failed = new ArrayList<>();
+        List<Sitemap> sitemaps= SitemapHandler.loadSitemaps(resourcesDir,failed);
+        failed.forEach(path -> System.out.println(path.toString()));
+        sitemaps.stream().filter(s-> Objects.equals(s.getName(), "5PagesNews")).
+                forEach(sm -> {
+                    try {
+                        Instant starts = Instant.now();
+                        sm.runMultiThreadedScraper(2); // run scraper(s)
+                        Instant ends = Instant.now();
+                        System.out.println("TIME: "+Duration.between(starts, ends).getSeconds()+" SECONDS");
+
+                    } catch (ExecutionException | InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    sm.getTasks().forEach(p->{
+                        Stream.generate(() -> "-").limit(100).forEach(System.out::print);
+                        System.out.print("\n");
+                        p.second.getAllDataWithId("articletitle").forEach(System.out::println);
+                    });
+                    sm.getTasks().forEach(p->{
+                        Stream.generate(() -> "-").limit(100).forEach(System.out::print);
+                        System.out.print("\n");
+                        p.second.getAllDataWithId("articlecontent").forEach(System.out::println);
+                    });
+                });
     }
 
     /*

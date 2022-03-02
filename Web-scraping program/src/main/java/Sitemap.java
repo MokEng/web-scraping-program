@@ -11,8 +11,24 @@ import java.util.concurrent.*;
 public class Sitemap implements Serializable {
     private final List<Pair<String,Task>> tasks = new ArrayList<>();
     private final String rootUrl; // all drivers run from Sitemap starts scraping from rootUrl;
-    public Sitemap(String rootUrl){
+    private String name;
+
+
+    public Sitemap(String rootUrl,String name){
         this.rootUrl = rootUrl;
+        this.name = name;
+    }
+
+    public String getRootUrl() {
+        return rootUrl;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public boolean addTask(String groupId, Task task){
@@ -22,7 +38,6 @@ public class Sitemap implements Serializable {
         WebDriver driver = new ChromeDriver();
         driver.manage().window().minimize();
         driver.navigate().to(rootUrl);
-        //tasks.forEach(p-> p.second.setWebDriver(driver));//set driver for all tasks
         tasks.forEach(p-> { // run all tasks in list
             p.second.run(driver);
         });
@@ -47,7 +62,6 @@ public class Sitemap implements Serializable {
             WebDriver driver = new ChromeDriver();
             driver.manage().window().minimize();
             driver.navigate().to(rootUrl);
-            //partitionOfTasks.forEach(p-> p.second.setWebDriver(driver));
             Callable<Void> callable = new TaskThread(partitionOfTasks,driver); // new callable for executing tasks
             Future<Void> future = pool.submit(callable); // submit callable to pool for execution
             set.add(future);
