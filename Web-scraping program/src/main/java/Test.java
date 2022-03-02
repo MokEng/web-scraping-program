@@ -53,15 +53,15 @@ public class Test {
         sitemap.runMultiThreadedScraper(2);
         // Print data grouped by the DataHandler
         System.out.println("Data grouped by id:\n\n");
-        DataHandler.groupTextTasksBy(GROUPBY.id,sitemap).forEach(m-> m.keySet().forEach(k->{
-            System.out.println("\n\nID : "+k+"\n");
-            m.get(k).forEach(t->System.out.println(t.dataName+":\n"+t.data));
-        }));
+        DataHandler.groupTextTasksBy(GROUPBY.id,sitemap).forEach((s, textTasks) -> {
+            System.out.println("\n\nID : "+s+"\n");
+            textTasks.forEach(t->System.out.println(t.dataName+":\n"+t.data));
+        });
         System.out.println("\n\nData grouped by name:\n\n");
-        DataHandler.groupTextTasksBy(GROUPBY.dataName,sitemap).forEach(m-> m.keySet().forEach(k->{
-            System.out.println("DATANAME : "+k+"\n");
-            m.get(k).forEach(t->System.out.println(t.data+"\n"));
-        }));
+        DataHandler.groupTextTasksBy(GROUPBY.dataName,sitemap).forEach((s, textTasks) -> {
+            System.out.println("\n\nDataname : "+s+"\n");
+            textTasks.forEach(t->System.out.println(t.dataName+":\n"+t.data));
+        });
 
 
 

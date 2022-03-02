@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -23,15 +24,15 @@ public class DataHandler {
         return allTasks;
     }
 
-    public static List<Map<String,List<TextTask>>> groupTextTasksBy(GROUPBY groupby,Sitemap sitemap){
+    public static Map<String,List<TextTask>> groupTextTasksBy(GROUPBY groupby,Sitemap sitemap){
         List<TextTask> all = getAllTextTasks(sitemap);
-        List<Map<String,List<TextTask>>> grouped = new ArrayList<>();
+        Map<String,List<TextTask>> grouped = new HashMap<>();
         if(groupby == GROUPBY.id){
-            grouped.add(all.stream().collect(
-                    Collectors.groupingBy(t->t.id)));
+            grouped = all.stream().collect(
+                    Collectors.groupingBy(t->t.id));
         }else if(groupby == GROUPBY.dataName){
-            grouped.add(all.stream().collect(
-                    Collectors.groupingBy(t->t.dataName)));
+            grouped = all.stream().collect(
+                    Collectors.groupingBy(t->t.dataName));
         }
         return grouped;
     }
