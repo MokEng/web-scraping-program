@@ -38,9 +38,11 @@ public class SitemapController extends GridPane
 			if (baseURL != null)
 			{
 				Stage addStage = new Stage();
+				addStage.setResizable(false);
 				addStage.initModality(Modality.APPLICATION_MODAL);
 				addStage.setTitle("Create New Sitemap");
-				addStage.setScene(new Scene(new TaskController(baseURL), 400, 500));
+				addStage.setScene(new Scene(new TaskController(baseURL)));
+				addStage.sizeToScene();
 
 				addStage.showAndWait();
 			}
@@ -52,12 +54,26 @@ public class SitemapController extends GridPane
 
 		sitemapList.getItems().addAll("Sitemap 1", "Sitemap 2", "Sitemap 3");
 
+		Button runButton = new Button("Run"),
+				scheduleButton = new Button("Schedule");
+		runButton.setMinWidth(65);
+		scheduleButton.setMinWidth(65);
+		VBox runButtonVbox = new VBox(5, runButton, scheduleButton);
+
+		ListView<String> taskList = new ListView<>();
+
+		Label selectedSitemapLabel = new Label("Selected Sitemap");
+		selectedSitemapLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
+
 		setVgap(10);
-		setHgap(10);
+		setHgap(5);
 		setStyle("-fx-border-insets: 5px; -fx-padding: 5px;");
 
 		add(sitemapLabel, 0, 0, 2, 1);
 		add(buttonVBox, 0, 1);
 		add(sitemapList, 1, 1);
+		add(selectedSitemapLabel, 2, 0, 2, 1);
+		add(taskList, 2, 1);
+		add(runButtonVbox, 3, 1);
 	}
 }

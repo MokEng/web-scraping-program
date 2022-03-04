@@ -143,13 +143,11 @@ public class GUITest extends Application
 			}
 		});
 
-		//SplitPane splitPane = new SplitPane();
-		//splitPane.getItems().addAll(vBox, selectionPane);
-		//splitPane.getItems().addAll(vBox, new TaskController());
-		//Scene scene = new Scene(splitPane, 1500, 900);
-		Scene scene = new Scene(new SitemapController(), 600, 400);
+		Scene scene = new Scene(new SitemapController());
 
 		stage.setScene(scene);
+		stage.setResizable(false);
+		stage.sizeToScene();
 		stage.show();
 	}
 

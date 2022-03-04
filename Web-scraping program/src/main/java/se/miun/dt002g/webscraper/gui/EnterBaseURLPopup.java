@@ -15,6 +15,7 @@ public class EnterBaseURLPopup
 	public EnterBaseURLPopup()
 	{
 		Stage baseURLStage = new Stage();
+		baseURLStage.setResizable(false);
 		baseURLStage.initModality(Modality.APPLICATION_MODAL);
 		baseURLStage.setTitle("Enter base URL");
 		Label enterBaseURLLabel = new Label("Enter base URL ");
@@ -30,6 +31,7 @@ public class EnterBaseURLPopup
 				baseURLStage.close();
 			}
 		});
+		enterBaseURLHBox.setStyle("-fx-border-insets: 5px; -fx-padding: 5px;");
 		baseURLStage.setScene(new Scene(enterBaseURLHBox));
 
 		baseURLStage.showAndWait();

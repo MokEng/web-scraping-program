@@ -51,7 +51,7 @@ public class TaskCreator extends GridPane
 		navigateButton.setToggleGroup(typeGroup);
 		textButton.setSelected(true);
 
-		HBox buttonHBox = new HBox(5, textButton, backButton, clickButton, navigateButton);
+		HBox taskButtonHBox = new HBox(5, textButton, backButton, clickButton, navigateButton);
 
 		Label urlPathLabel = new Label("URL/xPath ");
 		urlPathLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
@@ -69,6 +69,22 @@ public class TaskCreator extends GridPane
 				((HTMLElement)selectedNode).setClassName(selectedNodePreviousClass);
 			}
 		});
+
+		Button backArrowButton = new Button("<-");
+		backArrowButton.setMinWidth(50);
+
+		Button addButton = new Button("Add Task"),
+				removeButton = new Button("Remove Task"),
+				saveButton = new Button("Save Task");
+		addButton.setMinWidth(50);
+		removeButton.setMinWidth(50);
+		saveButton.setMinWidth(50);
+
+		HBox buttonHBox = new HBox(5, addButton, removeButton, saveButton);
+
+		Label taskListLabel = new Label("Task List");
+		taskListLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
+		ListView<String> taskList = new ListView<>();
 
 		WebView webView = new WebView();
 		webView.getEngine().load("https://google.se");
@@ -119,12 +135,16 @@ public class TaskCreator extends GridPane
 
 		add(createLabel, 0, 0, 2, 1);
 		add(addTaskLabel, 0, 1, 1, 1);
-		add(buttonHBox, 1, 1, 1, 1);
+		add(taskButtonHBox, 1, 1, 1, 1);
 		add(urlPathLabel, 0, 2, 1, 1);
 		add(urlPathField, 1, 2, 1, 1);
 		add(idLabel, 0, 3, 1, 1);
 		add(idField, 1, 3, 1, 1);
 		add(selectButton, 0 , 5, 1, 1);
+		add(backArrowButton, 1, 5);
+		add(taskListLabel, 2, 1);
+		add(buttonHBox, 2, 2, 1, 1);
+		add(taskList, 2, 3, 1, 4);
 		add(webView, 0 ,6, 2, 1);
 
 		textButton.selectedProperty().addListener((observable, oldValue, newValue) ->

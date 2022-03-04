@@ -36,9 +36,11 @@ public class TaskController extends GridPane
 		addButton.setOnAction(event ->
 		{
 			Stage addStage = new Stage();
+			addStage.setResizable(false);
 			addStage.initModality(Modality.APPLICATION_MODAL);
 			addStage.setTitle("Create New Task");
-			addStage.setScene(new Scene(new TaskCreator(baseURL), 1000, 750));
+			addStage.setScene(new Scene(new TaskCreator(baseURL)));
+			addStage.sizeToScene();
 
 			addStage.showAndWait();
 		});
