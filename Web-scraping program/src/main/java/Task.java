@@ -14,9 +14,9 @@ import java.util.*;
  */
 abstract class Task implements Serializable {
     // Data-members
-    private Task doFirst=null;
-    protected String id;
-    protected Exception exception;
+    public Task doFirst=null;
+    public String id;
+    public Exception exception;
     // Constructors
     public Task(String id) {
           this.id = id;
@@ -52,9 +52,9 @@ abstract class Task implements Serializable {
  * Task for extracting data in form of text from the web.
  */
 class TextTask extends Task {
-    private final String xPathToElement; // path to the element which inner HTML should be scraped.
-    String data; // the extracted data
-    String dataName; // key to find the data;
+    public final String xPathToElement; // path to the element which inner HTML should be scraped.
+    public String data; // the extracted data
+    public String dataName; // key to find the data;
     public TextTask(String xPathToElement,String id,String dataName) {
         super(id);
         this.xPathToElement = xPathToElement;
@@ -81,7 +81,7 @@ class TextTask extends Task {
  * Task for clicking an element in a web-page.
  */
 class ClickTask extends Task{
-    private String xPathToElement; // path to the element which should be clicked
+    public String xPathToElement; // path to the element which should be clicked
     public ClickTask(String xPathToElement,String id) {
         super(id);
         this.xPathToElement = xPathToElement;

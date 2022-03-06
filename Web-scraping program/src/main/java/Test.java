@@ -1,9 +1,11 @@
 
+import com.google.gson.Gson;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.json.Json;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,17 +53,8 @@ public class Test {
         String resourcesDir = System.getProperty("user.dir")+"/Web-scraping program/src/main/resources/";
 
         sitemap.runMultiThreadedScraper(2);
-        // Print data grouped by the DataHandler
-        System.out.println("Data grouped by id:\n\n");
-        DataHandler.groupTextTasksBy(GROUPBY.id,sitemap).forEach((s, textTasks) -> {
-            System.out.println("\n\nID : "+s+"\n");
-            textTasks.forEach(t->System.out.println(t.dataName+":\n"+t.data));
-        });
-        System.out.println("\n\nData grouped by name:\n\n");
-        DataHandler.groupTextTasksBy(GROUPBY.dataName,sitemap).forEach((s, textTasks) -> {
-            System.out.println("\n\nDataname : "+s+"\n");
-            textTasks.forEach(t->System.out.println(t.dataName+":\n"+t.data));
-        });
+        // Print JSON data grouped by the DataHandler
+        DataHandler.toJSON(GROUPBY.dataName,sitemap).forEach(System.out::println);
 
 
 
