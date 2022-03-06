@@ -1,12 +1,16 @@
+import com.github.opendevl.JFlat;
 import com.google.gson.Gson;
 
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 enum GROUPBY{id,dataName};
@@ -55,13 +59,34 @@ public class DataHandler {
      * @param sitemap, The sitemap which holds the Task objects
      * @return a list of strings in JSON format.
      */
-    public static List<String> toJSON(GROUPBY groupby, Sitemap sitemap){
+    public static List<String> toJSONList(GROUPBY groupby, Sitemap sitemap){
         List<String> jsons= new ArrayList<>();
         groupTextTasksBy(groupby,sitemap).forEach((s, textTasks) -> {
             Data d = new Data(groupby.name(),textTasks.stream().map(t->new TaskData(t.id,t.dataName,t.data)).toList());
             jsons.add(new Gson().toJson(d));
         });
         return jsons;
+    }
+    /**
+     * Converts and groups data from Task objects to JSON-format.
+     * @param groupby, what to group the data by
+     * @param sitemap, The sitemap which holds the Task objects
+     * @return a string in JSON format.
+     */
+    public static String toJSON(GROUPBY groupby, Sitemap sitemap){
+        Map<String, List<TextTask>> map = groupTextTasksBy(groupby,sitemap);
+        AtomicInteger s1 = new AtomicInteger(map.size());
+        AtomicReference<String> jsonString = new AtomicReference<>("[");
+        map.forEach((s, textTasks) -> {
+            Data d = new Data(groupby.name(),textTasks.stream().map(t->new TaskData(t.id,t.dataName,t.data)).toList());
+            jsonString.set(jsonString.get()+new Gson().toJson(d));
+            s1.addAndGet(-1);
+            if(s1.get() != 0){
+                jsonString.set(jsonString.get()+",");
+            }
+        });
+        jsonString.set(jsonString.get()+"]");
+        return jsonString.get();
     }
 
     /**
@@ -74,22 +99,7 @@ public class DataHandler {
     public static boolean toJSONFile(GROUPBY groupby, Sitemap sitemap, String filename){
         try{
             FileWriter fileWriter = new FileWriter(filename);
-            Map<String, List<TextTask>> map = groupTextTasksBy(groupby,sitemap);
-            AtomicInteger s1 = new AtomicInteger(map.size());
-            fileWriter.append('[');
-            map.forEach((s, textTasks) -> {
-                Data d = new Data(groupby.name(),textTasks.stream().map(t->new TaskData(t.id,t.dataName,t.data)).toList());
-                new Gson().toJson(d,fileWriter);
-                s1.addAndGet(-1);
-                if(s1.get() != 0){
-                    try {
-                        fileWriter.append(',');
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-            fileWriter.append(']');
+            fileWriter.write(toJSON(groupby,sitemap));
             fileWriter.close();
         }catch(Exception e){
             return false;
@@ -97,10 +107,18 @@ public class DataHandler {
         return true;
     }
 
+    public static boolean toCSVFile(GROUPBY groupby, Sitemap sitemap, String filename) {
 
-
-
-
-
-
+        String jsonstring = toJSON(groupby,sitemap);
+        JFlat flatMe = new JFlat(jsonstring);
+        try {
+            flatMe
+                    .json2Sheet()
+                    .write2csv(filename);
+        } catch (FileNotFoundException | UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
 }

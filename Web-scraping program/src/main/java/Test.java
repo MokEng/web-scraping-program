@@ -51,8 +51,9 @@ public class Test {
 
         sitemap.runMultiThreadedScraper(2);
         // Print JSON data grouped by the DataHandler
-        DataHandler.toJSON(GROUPBY.id,sitemap).forEach(System.out::println); // print data in json format
+        DataHandler.toJSONList(GROUPBY.id,sitemap).forEach(System.out::println); // print data in json format
         DataHandler.toJSONFile(GROUPBY.id,sitemap,resourcesDir+"news.json"); // write data to file in json format
+        DataHandler.toCSVFile(GROUPBY.id,sitemap,resourcesDir+"news.csv");
     }
 
     /*
