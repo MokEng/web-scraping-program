@@ -31,7 +31,7 @@ public class Test {
         // -----------------------------------------------------------------------------------
 
         List<Task> pages = new ArrayList<>();
-        final int nrOfPages = 5;
+        final int nrOfPages = 1;
         for(int x = 1; x < nrOfPages+1;x++){
             pages.add(new NavigateTask(urlP+x,"pager"));
         }
@@ -51,8 +51,8 @@ public class Test {
 
         sitemap.runMultiThreadedScraper(2);
         // Print JSON data grouped by the DataHandler
-        DataHandler.toJSON(GROUPBY.id,sitemap).forEach(System.out::println);
-
+        DataHandler.toJSON(GROUPBY.id,sitemap).forEach(System.out::println); // print data in json format
+        DataHandler.toJSONFile(GROUPBY.id,sitemap,resourcesDir+"news.json"); // write data to file in json format
     }
 
     /*

@@ -1,9 +1,12 @@
 import com.google.gson.Gson;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 enum GROUPBY{id,dataName};
@@ -18,7 +21,8 @@ public class DataHandler {
             Task temp = task;
             while (temp != null) {
                 if(temp instanceof TextTask){
-                    allTasks.add((TextTask) temp);
+                    if(temp.exception==null)
+                        allTasks.add((TextTask) temp);
                 }
                 temp = temp.getDoFirst();
             }
@@ -46,9 +50,9 @@ public class DataHandler {
     }
 
     /**
-     * Converts and groups data from a sitemap to JSON-format.
-     * @param groupby = what to group the data by
-     * @param sitemap = The sitemap which holds the tasks
+     * Converts and groups data from Task objects to JSON-format.
+     * @param groupby, what to group the data by
+     * @param sitemap, The sitemap which holds the Task objects
      * @return a list of strings in JSON format.
      */
     public static List<String> toJSON(GROUPBY groupby, Sitemap sitemap){
@@ -58,6 +62,39 @@ public class DataHandler {
             jsons.add(new Gson().toJson(d));
         });
         return jsons;
+    }
+
+    /**
+     * Writes and groups scraped data from Task-objects to a file in JSON format
+     * @param groupby, what to group the data by
+     * @param sitemap, the sitemap containing the tasks
+     * @param filename, output file path
+     * @return true if write was successful
+     */
+    public static boolean toJSONFile(GROUPBY groupby, Sitemap sitemap, String filename){
+        try{
+            FileWriter fileWriter = new FileWriter(filename);
+            Map<String, List<TextTask>> map = groupTextTasksBy(groupby,sitemap);
+            AtomicInteger s1 = new AtomicInteger(map.size());
+            fileWriter.append('[');
+            map.forEach((s, textTasks) -> {
+                Data d = new Data(groupby.name(),textTasks.stream().map(t->new TaskData(t.id,t.dataName,t.data)).toList());
+                new Gson().toJson(d,fileWriter);
+                s1.addAndGet(-1);
+                if(s1.get() != 0){
+                    try {
+                        fileWriter.append(',');
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            fileWriter.append(']');
+            fileWriter.close();
+        }catch(Exception e){
+            return false;
+        }
+        return true;
     }
 
 
