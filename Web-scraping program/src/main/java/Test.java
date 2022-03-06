@@ -1,11 +1,8 @@
-
-import com.google.gson.Gson;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.json.Json;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,9 +51,7 @@ public class Test {
 
         sitemap.runMultiThreadedScraper(2);
         // Print JSON data grouped by the DataHandler
-        DataHandler.toJSON(GROUPBY.dataName,sitemap).forEach(System.out::println);
-
-
+        DataHandler.toJSON(GROUPBY.id,sitemap).forEach(System.out::println);
 
     }
 
