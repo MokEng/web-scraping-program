@@ -54,7 +54,7 @@ public class SitemapHandler {
         AtomicBoolean success= new AtomicBoolean(true);
         sitemaps.forEach(sitemap -> {
             try {
-                ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(dirname+sitemap.getName()));
+                ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(dirname+sitemap.getName()+".sm"));
                 oos.writeObject(sitemap);
                 oos.flush();
                 oos.close();
@@ -64,6 +64,17 @@ public class SitemapHandler {
             }
         });
         return success.get();
+    }
+
+    /**
+     * Removes each Sitemap file corresponding to a Sitemap that's given as argument.
+     * @param dirname
+     * @param deleted
+     * @return
+     */
+    public static boolean removeSitemapFile(final String dirname, Sitemap deleted){
+        File f= new File(dirname+deleted.getName()+".sm"); //file to be deleted
+        return f.delete();
     }
 
 }
