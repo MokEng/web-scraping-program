@@ -49,8 +49,6 @@ public class TaskController extends GridPane
 
 		ListView<String> list = new ListView<>();
 
-		list.getItems().addAll("Task 1", "Task 2", "Task 3");
-
 		setVgap(10);
 		setHgap(10);
 		setStyle("-fx-border-insets: 5px; -fx-padding: 5px;");

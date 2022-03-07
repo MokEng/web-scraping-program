@@ -52,8 +52,6 @@ public class SitemapController extends GridPane
 
 		ListView<String> sitemapList = new ListView<>();
 
-		sitemapList.getItems().addAll("Sitemap 1", "Sitemap 2", "Sitemap 3");
-
 		Button runButton = new Button("Run"),
 				scheduleButton = new Button("Schedule");
 		runButton.setMinWidth(65);
