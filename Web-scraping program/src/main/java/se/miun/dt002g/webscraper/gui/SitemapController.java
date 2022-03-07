@@ -14,12 +14,13 @@ import se.miun.dt002g.webscraper.scraper.SitemapHandler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class SitemapController extends GridPane
 {
 	List<Sitemap> sitemaps;
 	String sitemapSourceDir;
-
+	String currentSelectedSitemap;
 	public SitemapController()
 	{
 		ListView<String> sitemapList = new ListView<>();
@@ -85,6 +86,16 @@ public class SitemapController extends GridPane
 		add(selectedSitemapLabel, 2, 0, 2, 1);
 		add(taskList, 2, 1);
 		add(runButtonVbox, 3, 1);
+
+		sitemapList.getSelectionModel().selectedItemProperty().addListener(l->{
+			currentSelectedSitemap = sitemapList.getSelectionModel().getSelectedItem();
+			System.out.println(currentSelectedSitemap);
+		});
+		deleteButton.setOnAction(event -> {
+			sitemaps.removeIf(s-> Objects.equals(s.getName(),currentSelectedSitemap));
+			sitemapList.setItems(FXCollections.observableArrayList(sitemaps.stream().map(Sitemap::getName).toList()));
+		});
+
 
 		sitemapSourceDir=System.getProperty("user.dir")+"/src/main/resources/";
 		sitemaps = SitemapHandler.loadSitemaps(sitemapSourceDir,new ArrayList<>());
