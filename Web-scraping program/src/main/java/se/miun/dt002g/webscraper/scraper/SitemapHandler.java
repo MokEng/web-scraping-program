@@ -34,7 +34,6 @@ public class SitemapHandler {
                             Sitemap s = (Sitemap) ois.readObject();
                             sitemapList.add(s);
                         } catch (IOException | ClassNotFoundException e) {
-                            e.printStackTrace();
                             failedFiles.add(filePath);
                         }
                     });

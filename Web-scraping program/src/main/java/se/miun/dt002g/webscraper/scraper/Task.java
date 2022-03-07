@@ -29,7 +29,7 @@ public abstract class Task implements Serializable {
      * then execute the job of this Task.
      * @param driver used to crawl the web
      */
-    void run(WebDriver driver) {
+    public void run(WebDriver driver) {
         if(doFirst!=null){
             doFirst.run(driver);
         }

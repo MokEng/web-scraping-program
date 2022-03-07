@@ -1,5 +1,6 @@
 package se.miun.dt002g.webscraper.gui;
 
+import javafx.collections.FXCollections;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -8,11 +9,19 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import se.miun.dt002g.webscraper.scraper.Sitemap;
+import se.miun.dt002g.webscraper.scraper.SitemapHandler;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SitemapController extends GridPane
 {
+	List<Sitemap> sitemaps;
+	String sitemapSourceDir;
 	public SitemapController()
 	{
+
 		Label sitemapLabel = new Label("Sitemaps");
 		sitemapLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 20px");
 
@@ -73,5 +82,13 @@ public class SitemapController extends GridPane
 		add(selectedSitemapLabel, 2, 0, 2, 1);
 		add(taskList, 2, 1);
 		add(runButtonVbox, 3, 1);
+
+		sitemapSourceDir=System.getProperty("user.dir")+"/src/main/resources/";
+		sitemaps = SitemapHandler.loadSitemaps(sitemapSourceDir,new ArrayList<>());
+		sitemapList.setItems(FXCollections.observableArrayList(sitemaps.stream().map(Sitemap::getName).toList()));
+	}
+
+	public boolean saveSitemaps(){
+		return SitemapHandler.saveSitemaps(sitemapSourceDir,sitemaps);
 	}
 }
