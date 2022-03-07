@@ -9,15 +9,17 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import se.miun.dt002g.webscraper.scraper.Sitemap;
 
 public class TaskController extends GridPane
 {
 	private String baseURL;
+	private Sitemap sitemap;
 
-	public TaskController(String url)
+	public TaskController(String url, Sitemap sitemap)
 	{
 		baseURL = url;
-
+		this.sitemap = sitemap;
 		Label taskLabel = new Label("Tasks");
 		taskLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 20px");
 

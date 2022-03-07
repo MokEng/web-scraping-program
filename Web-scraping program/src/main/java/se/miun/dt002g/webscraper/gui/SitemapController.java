@@ -15,6 +15,7 @@ import se.miun.dt002g.webscraper.scraper.SitemapHandler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class SitemapController extends GridPane
 {
@@ -45,19 +46,33 @@ public class SitemapController extends GridPane
 			EnterBaseURLPopup popup = new EnterBaseURLPopup();
 			baseURL = popup.getBaseURL();
 			sitemapName = popup.getSitemapName();
-			sitemaps.add(new Sitemap(baseURL,sitemapName));
-			sitemapList.setItems(FXCollections.observableArrayList(sitemaps.stream().map(Sitemap::getName).toList()));
 			System.out.println(baseURL);
 
-			if (baseURL != null)
+			if (baseURL != null && sitemapName!= null)
 			{
+				Sitemap newSitemap = new Sitemap(baseURL,sitemapName);
+				sitemaps.add(newSitemap);
+				sitemapList.setItems(FXCollections.observableArrayList(sitemaps.stream().map(Sitemap::getName).toList()));
 				Stage addStage = new Stage();
 				addStage.setResizable(false);
 				addStage.initModality(Modality.APPLICATION_MODAL);
 				addStage.setTitle("Create New Sitemap");
-				addStage.setScene(new Scene(new TaskController(baseURL)));
+				addStage.setScene(new Scene(new TaskController(baseURL,newSitemap)));
 				addStage.sizeToScene();
 
+				addStage.showAndWait();
+			}
+		});
+
+		editButton.setOnAction(event -> {
+			Stage addStage = new Stage();
+			addStage.setResizable(false);
+			addStage.initModality(Modality.APPLICATION_MODAL);
+			addStage.setTitle("Create New Sitemap");
+			Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s.getName(), currentSelectedSitemap)).findAny();
+			if(current.isPresent()){
+				addStage.setScene(new Scene(new TaskController(current.get().getRootUrl(),current.get())));
+				addStage.sizeToScene();
 				addStage.showAndWait();
 			}
 		});
