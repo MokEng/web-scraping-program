@@ -19,9 +19,10 @@ public class SitemapController extends GridPane
 {
 	List<Sitemap> sitemaps;
 	String sitemapSourceDir;
+
 	public SitemapController()
 	{
-
+		ListView<String> sitemapList = new ListView<>();
 		Label sitemapLabel = new Label("Sitemaps");
 		sitemapLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 20px");
 
@@ -39,9 +40,12 @@ public class SitemapController extends GridPane
 
 		addButton.setOnAction(event ->
 		{
-			String baseURL = null;
+			String baseURL = null,sitemapName=null;
 			EnterBaseURLPopup popup = new EnterBaseURLPopup();
 			baseURL = popup.getBaseURL();
+			sitemapName = popup.getSitemapName();
+			sitemaps.add(new Sitemap(baseURL,sitemapName));
+			sitemapList.setItems(FXCollections.observableArrayList(sitemaps.stream().map(Sitemap::getName).toList()));
 			System.out.println(baseURL);
 
 			if (baseURL != null)
@@ -59,7 +63,6 @@ public class SitemapController extends GridPane
 
 		VBox buttonVBox = new VBox(5, addButton, editButton, deleteButton, saveButton, loadButton);
 
-		ListView<String> sitemapList = new ListView<>();
 
 		Button runButton = new Button("Run"),
 				scheduleButton = new Button("Schedule");
@@ -85,6 +88,7 @@ public class SitemapController extends GridPane
 
 		sitemapSourceDir=System.getProperty("user.dir")+"/src/main/resources/";
 		sitemaps = SitemapHandler.loadSitemaps(sitemapSourceDir,new ArrayList<>());
+		System.out.println(sitemaps.size());
 		sitemapList.setItems(FXCollections.observableArrayList(sitemaps.stream().map(Sitemap::getName).toList()));
 	}
 
