@@ -9,16 +9,24 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import se.miun.dt002g.webscraper.scraper.Sitemap;
-import se.miun.dt002g.webscraper.scraper.SitemapHandler;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import se.miun.dt002g.webscraper.scraper.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class SitemapController extends GridPane
 {
+
 	List<Sitemap> sitemaps;
 	String sitemapSourceDir;
 	String currentSelectedSitemap;
@@ -84,6 +92,17 @@ public class SitemapController extends GridPane
 				scheduleButton = new Button("Schedule");
 		runButton.setMinWidth(65);
 		scheduleButton.setMinWidth(65);
+
+		runButton.setOnAction(event -> {
+			Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s.getName(), currentSelectedSitemap)).findAny();
+			if(current.isPresent()){
+				try {
+					current.get().runMultiThreadedScraper(2);
+				} catch (ExecutionException | InterruptedException e) {
+					System.out.println("Something went wrong while scraping..");
+				}
+			}
+		});
 		VBox runButtonVbox = new VBox(5, runButton, scheduleButton);
 
 		ListView<String> taskList = new ListView<>();
@@ -107,6 +126,7 @@ public class SitemapController extends GridPane
 			System.out.println(currentSelectedSitemap);
 		});
 		deleteButton.setOnAction(event -> {
+			SitemapHandler.removeSitemapFile(sitemapSourceDir,currentSelectedSitemap);
 			sitemaps.removeIf(s-> Objects.equals(s.getName(),currentSelectedSitemap));
 			sitemapList.setItems(FXCollections.observableArrayList(sitemaps.stream().map(Sitemap::getName).toList()));
 		});
@@ -119,6 +139,7 @@ public class SitemapController extends GridPane
 	}
 
 	public boolean saveSitemaps(){
+		sitemaps.forEach(Sitemap::clearDataFromTasks);
 		return SitemapHandler.saveSitemaps(sitemapSourceDir,sitemaps);
 	}
 }

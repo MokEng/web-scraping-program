@@ -71,8 +71,8 @@ public class SitemapHandler {
      * @param deleted
      * @return
      */
-    public static boolean removeSitemapFile(final String dirname, Sitemap deleted){
-        File f= new File(dirname+deleted.getName()+".sm"); //file to be deleted
+    public static boolean removeSitemapFile(final String dirname, String deleted){
+        File f= new File(dirname+deleted+".sm"); //file to be deleted
         return f.delete();
     }
 
