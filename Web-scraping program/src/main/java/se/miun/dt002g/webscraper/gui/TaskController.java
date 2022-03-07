@@ -16,6 +16,8 @@ public class TaskController extends GridPane
 
 	public TaskController(String url)
 	{
+		baseURL = url;
+
 		Label taskLabel = new Label("Tasks");
 		taskLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 20px");
 

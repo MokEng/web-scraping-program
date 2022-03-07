@@ -10,6 +10,10 @@ import javafx.scene.layout.Priority;
 import javafx.scene.web.WebView;
 import org.w3c.dom.*;
 import org.w3c.dom.html.HTMLElement;
+import se.miun.dt002g.webscraper.scraper.ClickTask;
+import se.miun.dt002g.webscraper.scraper.Task;
+
+import java.util.Stack;
 
 public class TaskCreator extends GridPane
 {
@@ -23,8 +27,12 @@ public class TaskCreator extends GridPane
 	private Node selectedNode = null;
 	private String selectedNodePreviousClass = null;
 
+	private Stack<Task> tasks;
+
 	public TaskCreator(String url)
 	{
+		tasks = new Stack<>();
+
 		setVgap(5);
 		setHgap(10);
 		setStyle("-fx-border-insets: 5px; -fx-padding: 5px;");
@@ -35,23 +43,20 @@ public class TaskCreator extends GridPane
 		Label addTaskLabel = new Label("Task Type ");
 		addTaskLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
 		RadioButton textButton = new RadioButton("Text"),
-				backButton = new RadioButton("Back"),
 				clickButton = new RadioButton("Click"),
 				navigateButton = new RadioButton("Navigate");
 
 		textButton.setMinWidth(50);
-		backButton.setMinWidth(50);
 		clickButton.setMinWidth(50);
 		navigateButton.setMinWidth(50);
 
 		ToggleGroup typeGroup = new ToggleGroup();
 		textButton.setToggleGroup(typeGroup);
-		backButton.setToggleGroup(typeGroup);
 		clickButton.setToggleGroup(typeGroup);
 		navigateButton.setToggleGroup(typeGroup);
 		textButton.setSelected(true);
 
-		HBox taskButtonHBox = new HBox(5, textButton, backButton, clickButton, navigateButton);
+		HBox taskButtonHBox = new HBox(5, textButton, clickButton, navigateButton);
 
 		Label urlPathLabel = new Label("URL/xPath ");
 		urlPathLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
@@ -72,6 +77,9 @@ public class TaskCreator extends GridPane
 
 		Button backArrowButton = new Button("<-");
 		backArrowButton.setMinWidth(50);
+		Button selectChildrenButton = new Button("Select Children");
+		selectChildrenButton.setMinWidth(50);
+		HBox domManipButtonHBox = new HBox(5, backArrowButton, selectChildrenButton);
 
 		Button addButton = new Button("Add Task"),
 				removeButton = new Button("Remove Task"),
@@ -87,7 +95,7 @@ public class TaskCreator extends GridPane
 		ListView<String> taskList = new ListView<>();
 
 		WebView webView = new WebView();
-		webView.getEngine().load("https://google.se");
+		webView.getEngine().load(url);
 		GridPane.setVgrow(webView, Priority.ALWAYS);
 
 		webView.getEngine().getLoadWorker().stateProperty().addListener((observable, oldValue, newValue) -> {
@@ -95,22 +103,17 @@ public class TaskCreator extends GridPane
 			{
 				Document doc = webView.getEngine().getDocument();
 				Element styleNode = doc.createElement("style");
-				//Text styleContent = doc.createTextNode(CSS_START + "#" + Integer.toHexString(colorPicker.getValue().hashCode()) + CSS_END);
 				Text styleContent = doc.createTextNode(CSS_START + "cyan" + CSS_END);
 				styleNode.appendChild(styleContent);
 				doc.getDocumentElement().getElementsByTagName("head").item(0).appendChild(styleNode);
 
-				//nodes.clear();
 				NodeList nodeList = webView.getEngine().getDocument().getElementsByTagName("*");
 				ObservableList<String> obsList = FXCollections.observableArrayList();
-				//filteredList = new FilteredList<>(obsList);
 
 				for (int i = 0; i < nodeList.getLength(); i++)
 				{
 					String xPath = NodeUtilities.getXPath(nodeList.item(i));
-					//list.getItems().add(nodeList.item(i).getTextContent() + " || " + xPath);
 					obsList.add(nodeList.item(i).getTextContent() + " || " + xPath);
-					//nodes.put(xPath, nodeList.item(i));
 
 					NodeUtilities.addOnclick(nodeList.item(i), evt ->
 					{
@@ -126,11 +129,18 @@ public class TaskCreator extends GridPane
 							evt.preventDefault();
 							evt.stopPropagation();
 						}
+						else
+						{
+							if (selectedNode != null) ((HTMLElement)selectedNode).setClassName(selectedNodePreviousClass);
+
+							ClickTask clickTask;
+							if (tasks.isEmpty()) clickTask = new ClickTask(NodeUtilities.getXPath((Node)evt.getTarget()), "");
+							else clickTask = new ClickTask(NodeUtilities.getXPath((Node)evt.getTarget()), tasks.peek(), "");
+
+							tasks.push(clickTask);
+						}
 					});
 				}
-
-				// todo: Add event handler for navigating to new site. Remove Navigate-task radio button.
-				// todo: Remove Back-task radio button. Use <- button instead.
 			}
 		});
 
@@ -142,7 +152,7 @@ public class TaskCreator extends GridPane
 		add(idLabel, 0, 3, 1, 1);
 		add(idField, 1, 3, 1, 1);
 		add(selectButton, 0 , 5, 1, 1);
-		add(backArrowButton, 1, 5);
+		add(domManipButtonHBox, 1, 5);
 		add(taskListLabel, 2, 1);
 		add(buttonHBox, 2, 2, 1, 1);
 		add(taskList, 2, 3, 1, 4);
@@ -152,11 +162,6 @@ public class TaskCreator extends GridPane
 		{
 			urlPathField.setDisable(false);
 			idField.setDisable(false);
-		});
-		backButton.selectedProperty().addListener((observable, oldValue, newValue) ->
-		{
-			urlPathField.setDisable(true);
-			idField.setDisable(true);
 		});
 		clickButton.selectedProperty().addListener((observable, oldValue, newValue) ->
 		{
