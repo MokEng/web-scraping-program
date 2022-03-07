@@ -9,12 +9,16 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.web.WebHistory;
 import javafx.scene.web.WebView;
+import javafx.stage.Stage;
 import org.w3c.dom.*;
 import org.w3c.dom.html.HTMLElement;
 import se.miun.dt002g.webscraper.scraper.ClickTask;
 import se.miun.dt002g.webscraper.scraper.NavigateTask;
 import se.miun.dt002g.webscraper.scraper.Task;
+import se.miun.dt002g.webscraper.scraper.TextTask;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Stack;
 
@@ -29,9 +33,12 @@ public class TaskCreator extends GridPane
 
 	private Node selectedNode = null;
 	private String selectedNodePreviousClass = null;
+	private List<Node> selectedNodes = null;
 
 	private final Stack<Task> tasks;
 	private String lastestButtonPressed = "";
+
+	private WebView webView;
 
 	public TaskCreator(String url)
 	{
@@ -87,7 +94,8 @@ public class TaskCreator extends GridPane
 		backArrowButton.setMinWidth(50);
 		Button selectChildrenButton = new Button("Select Children");
 		selectChildrenButton.setMinWidth(50);
-		HBox domManipButtonHBox = new HBox(5, backArrowButton, selectChildrenButton);
+		Button selectSiblingsButton = new Button("Select Siblings");
+		HBox domManipButtonHBox = new HBox(5, backArrowButton, selectChildrenButton, selectSiblingsButton);
 
 		Button addButton = new Button("Add Task"),
 				removeButton = new Button("Remove Task"),
@@ -110,28 +118,61 @@ public class TaskCreator extends GridPane
 			{
 				case "Text" ->
 				{
+					String textPath = urlPathField.getText();
+					String id = idField.getText();
+					String dataName = nameField.getText();
 
+					if (textPath != null && !textPath.isEmpty() && selectedNodes == null)
+					{
+						TextTask textTask;
+						if (tasks.isEmpty()) textTask = new TextTask(textPath, id, dataName);
+						else textTask = new TextTask(textPath, tasks.peek(), id, dataName);
+						tasks.push(textTask);
+						taskList.setItems(FXCollections.observableArrayList(tasks));
+					}
+					else if (selectedNodes != null)
+					{
+						for (int i = 0; i < selectedNodes.size(); i++)
+						{
+							textPath = NodeUtilities.getXPath(selectedNodes.get(i));
+							TextTask textTask;
+							if (tasks.isEmpty()) textTask = new TextTask(textPath, id+i, dataName);
+							else textTask = new TextTask(textPath, tasks.peek(), id+i, dataName);
+							tasks.push(textTask);
+						}
+						taskList.setItems(FXCollections.observableArrayList(tasks));
+					}
 				}
 				case "Click" ->
 				{
-
+					String clickPath = urlPathField.getText();
+					if (clickPath != null && !clickPath.isEmpty() && selectedNodes == null)
+					{
+						ClickTask clickTask;
+						if (tasks.isEmpty()) clickTask = new ClickTask(clickPath, "");
+						else clickTask = new ClickTask(clickPath, tasks.peek(), "");
+						tasks.push(clickTask);
+						taskList.setItems(FXCollections.observableArrayList(tasks));
+					}
 				}
 				case "Navigate" ->
 				{
 					String navigateUrl = urlPathField.getText();
-					if (navigateUrl != null && !navigateUrl.isEmpty())
+					if (navigateUrl != null && !navigateUrl.isEmpty() && selectedNodes == null)
 					{
 						NavigateTask navigateTask;
 						if (tasks.isEmpty()) navigateTask = new NavigateTask(navigateUrl, "navigate");
 						else navigateTask = new NavigateTask(navigateUrl, tasks.peek(), "navigate");
 						tasks.push(navigateTask);
 						taskList.setItems(FXCollections.observableArrayList(tasks));
+
+						webView.getEngine().load(navigateUrl);
 					}
 				}
 			}
 		});
 
-		WebView webView = new WebView();
+		webView = new WebView();
 		webView.getEngine().load(url);
 		GridPane.setVgrow(webView, Priority.ALWAYS);
 		backArrowButton.setOnAction(event ->
@@ -171,6 +212,9 @@ public class TaskCreator extends GridPane
 		});
 		webView.getEngine().locationProperty().addListener((observable, oldValue, newValue) ->
 		{
+			selectedNodes = null;
+			selectedNode = null;
+			selectedNodePreviousClass = null;
 			if (!tasks.isEmpty() && !lastestButtonPressed.equals("remove"))
 			{
 				tasks.pop();
@@ -202,6 +246,7 @@ public class TaskCreator extends GridPane
 						{
 							if (selectedNode != null) ((HTMLElement)selectedNode).setClassName(selectedNodePreviousClass);
 
+							selectedNodes = null;
 							selectedNode = (Node)evt.getTarget();
 							selectedNodePreviousClass = ((HTMLElement)selectedNode).getClassName();
 							((HTMLElement)selectedNode).setClassName(selectedNodePreviousClass + " selectedNode");
@@ -227,6 +272,44 @@ public class TaskCreator extends GridPane
 						}
 					});
 				}
+			}
+		});
+
+		saveButton.setOnAction(event -> ((Stage)getScene().getWindow()).close());
+
+		selectChildrenButton.setOnAction(event ->
+		{
+			NodeList children = selectedNode.getChildNodes();
+			int nChildren = children.getLength();
+
+			if (nChildren > 0)
+			{
+				selectedNodes = new ArrayList<>();
+
+				for (int i = 0; i < nChildren; i++)
+				{
+					selectedNodes.add(children.item(i));
+				}
+
+				urlPathField.setText("<Multiple values>");
+			}
+		});
+
+		selectSiblingsButton.setOnAction(event ->
+		{
+			NodeList siblings = selectedNode.getParentNode().getChildNodes();
+			int nSiblings = siblings.getLength();
+
+			if (nSiblings > 0)
+			{
+				selectedNodes = new ArrayList<>();
+
+				for (int i = 0; i < nSiblings; i++)
+				{
+					selectedNodes.add(siblings.item(i));
+				}
+
+				urlPathField.setText("<Multiple values>");
 			}
 		});
 
@@ -264,5 +347,10 @@ public class TaskCreator extends GridPane
 			idField.setDisable(true);
 			nameField.setDisable(true);
 		});
+	}
+
+	public Task getTask()
+	{
+		return tasks.isEmpty() ? null : tasks.peek();
 	}
 }

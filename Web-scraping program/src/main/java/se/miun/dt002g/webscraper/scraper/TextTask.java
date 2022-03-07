@@ -37,5 +37,9 @@ public class TextTask extends Task
 
 	}
 
-
+	@Override
+	public String toString()
+	{
+		return "Text (" + id + ", " + dataName + ") - " + xPathToElement;
+	}
 }

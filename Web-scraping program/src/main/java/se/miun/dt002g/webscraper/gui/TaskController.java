@@ -1,5 +1,6 @@
 package se.miun.dt002g.webscraper.gui;
 
+import javafx.collections.FXCollections;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -10,11 +11,12 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import se.miun.dt002g.webscraper.scraper.Sitemap;
+import se.miun.dt002g.webscraper.scraper.Task;
 
 public class TaskController extends GridPane
 {
-	private String baseURL;
-	private Sitemap sitemap;
+	private final String baseURL;
+	private final Sitemap sitemap;
 
 	public TaskController(String url, Sitemap sitemap)
 	{
@@ -37,21 +39,28 @@ public class TaskController extends GridPane
 		editButton.setMinWidth(50);
 		deleteButton.setMinWidth(50);
 
+		VBox buttonVBox = new VBox(5, addButton, editButton, deleteButton);
+
+		ListView<Task> list = new ListView<>();
+
 		addButton.setOnAction(event ->
 		{
 			Stage addStage = new Stage();
 			addStage.setResizable(false);
 			addStage.initModality(Modality.APPLICATION_MODAL);
 			addStage.setTitle("Create New Task");
-			addStage.setScene(new Scene(new TaskCreator(baseURL)));
+			TaskCreator taskCreator = new TaskCreator(baseURL);
+			addStage.setScene(new Scene(taskCreator));
 			addStage.sizeToScene();
-
 			addStage.showAndWait();
+
+			Task createdTask = taskCreator.getTask();
+			if (createdTask != null)
+			{
+				sitemap.addTask(createdTask);
+				list.setItems(FXCollections.observableArrayList(sitemap.getTasks()));
+			}
 		});
-
-		VBox buttonVBox = new VBox(5, addButton, editButton, deleteButton);
-
-		ListView<String> list = new ListView<>();
 
 		setVgap(10);
 		setHgap(10);
