@@ -2,14 +2,23 @@ plugins {
     id 'java'
 }
 
-group 'org.example'
-version '1.0-SNAPSHOT'
+plugins {
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.0.10'
+}
+
+plugins {
+    id 'org.springframework.boot' version '2.6.3'
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
+    implementation 'org.seleniumhq.selenium:selenium-java:4.1.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
     // https://jmaven.com/maven/com.github.opendevl/json2flat
     implementation group: 'com.github.opendevl', name: 'json2flat', version: '1.0.3'
     implementation 'com.google.code.gson:gson:2.9.0'
@@ -21,3 +30,23 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+javafx {
+    version = "17"
+    modules = [ 'javafx.controls', 'javafx.web', 'javafx.fxml' ]
+}
+
+mainClassName = "se.miun.dt002g.webscraper.gui.GUITest"
+
+jar {
+    manifest {
+        attributes "Main-Class": "se.miun.dt002g.webscraper.gui.GUITest"
+    }
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
