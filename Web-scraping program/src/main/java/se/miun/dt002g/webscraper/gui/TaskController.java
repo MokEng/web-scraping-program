@@ -42,7 +42,7 @@ public class TaskController extends GridPane
 		VBox buttonVBox = new VBox(5, addButton, editButton, deleteButton);
 
 		ListView<Task> list = new ListView<>();
-
+		list.setItems(FXCollections.observableArrayList(sitemap.getTasks()));
 		addButton.setOnAction(event ->
 		{
 			Stage addStage = new Stage();

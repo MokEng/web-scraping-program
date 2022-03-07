@@ -134,7 +134,7 @@ public class SitemapController extends GridPane
 
 		sitemapSourceDir=System.getProperty("user.dir")+"/src/main/resources/";
 		sitemaps = SitemapHandler.loadSitemaps(sitemapSourceDir,new ArrayList<>());
-		System.out.println(sitemaps.size());
+		System.out.println(sitemaps.get(0).getTasks().size());
 		sitemapList.setItems(FXCollections.observableArrayList(sitemaps.stream().map(Sitemap::getName).toList()));
 	}
 
