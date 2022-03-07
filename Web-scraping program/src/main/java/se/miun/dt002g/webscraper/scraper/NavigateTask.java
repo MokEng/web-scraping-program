@@ -26,4 +26,10 @@ public class NavigateTask extends Task
 	{
 		driver.navigate().to(url);
 	}
+
+	@Override
+	public String toString()
+	{
+		return "Navigate - " + url;
+	}
 }

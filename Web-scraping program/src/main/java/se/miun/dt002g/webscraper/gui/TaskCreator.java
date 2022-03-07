@@ -1,18 +1,21 @@
 package se.miun.dt002g.webscraper.gui;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.concurrent.Worker;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.web.WebHistory;
 import javafx.scene.web.WebView;
 import org.w3c.dom.*;
 import org.w3c.dom.html.HTMLElement;
 import se.miun.dt002g.webscraper.scraper.ClickTask;
+import se.miun.dt002g.webscraper.scraper.NavigateTask;
 import se.miun.dt002g.webscraper.scraper.Task;
 
+import java.util.Objects;
 import java.util.Stack;
 
 public class TaskCreator extends GridPane
@@ -27,7 +30,8 @@ public class TaskCreator extends GridPane
 	private Node selectedNode = null;
 	private String selectedNodePreviousClass = null;
 
-	private Stack<Task> tasks;
+	private final Stack<Task> tasks;
+	private String lastestButtonPressed = "";
 
 	public TaskCreator(String url)
 	{
@@ -66,6 +70,10 @@ public class TaskCreator extends GridPane
 		idLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
 		TextField idField = new TextField();
 
+		Label nameLabel = new Label("Data Name ");
+		nameLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
+		TextField nameField = new TextField();
+
 		ToggleButton selectButton = new ToggleButton("Select Element");
 		selectButton.selectedProperty().addListener((observable, oldValue, newValue) ->
 		{
@@ -92,11 +100,88 @@ public class TaskCreator extends GridPane
 
 		Label taskListLabel = new Label("Task List");
 		taskListLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
-		ListView<String> taskList = new ListView<>();
+		ListView<Task> taskList = new ListView<>();
+
+		addButton.setOnAction(event ->
+		{
+			String taskType = ((RadioButton)typeGroup.getSelectedToggle()).getText();
+
+			switch (taskType)
+			{
+				case "Text" ->
+				{
+
+				}
+				case "Click" ->
+				{
+
+				}
+				case "Navigate" ->
+				{
+					String navigateUrl = urlPathField.getText();
+					if (navigateUrl != null && !navigateUrl.isEmpty())
+					{
+						NavigateTask navigateTask;
+						if (tasks.isEmpty()) navigateTask = new NavigateTask(navigateUrl, "navigate");
+						else navigateTask = new NavigateTask(navigateUrl, tasks.peek(), "navigate");
+						tasks.push(navigateTask);
+						taskList.setItems(FXCollections.observableArrayList(tasks));
+					}
+				}
+			}
+		});
 
 		WebView webView = new WebView();
 		webView.getEngine().load(url);
 		GridPane.setVgrow(webView, Priority.ALWAYS);
+		backArrowButton.setOnAction(event ->
+		{
+			WebHistory history = webView.getEngine().getHistory();
+			if (history.getCurrentIndex() != 0)
+			{
+				NavigateTask navigateTask;
+				String backUrl = history.getEntries().get(history.getCurrentIndex() - 1).getUrl();
+				if (tasks.isEmpty()) navigateTask = new NavigateTask(backUrl, "back");
+				else navigateTask = new NavigateTask(backUrl, tasks.peek(), "back");
+				tasks.push(navigateTask);
+				taskList.setItems(FXCollections.observableArrayList(tasks));
+				Platform.runLater(() -> webView.getEngine().executeScript("history.back()"));
+				lastestButtonPressed = "back";
+			}
+		});
+		removeButton.setOnAction(event ->
+		{
+			if (!tasks.isEmpty())
+			{
+				Task task = tasks.pop();
+				if (task instanceof NavigateTask)
+				{
+					if (Objects.equals(task.id, "back"))
+					{
+						webView.getEngine().executeScript("window.history.forward()");
+					}
+					else if (Objects.equals(task.id, "navigate"))
+					{
+						webView.getEngine().executeScript("history.back()");
+					}
+				}
+				taskList.setItems(FXCollections.observableArrayList(tasks));
+				lastestButtonPressed = "remove";
+			}
+		});
+		webView.getEngine().locationProperty().addListener((observable, oldValue, newValue) ->
+		{
+			if (!tasks.isEmpty() && !lastestButtonPressed.equals("remove"))
+			{
+				tasks.pop();
+
+				NavigateTask navigateTask;
+				if (tasks.isEmpty()) navigateTask = new NavigateTask(newValue, "navigate");
+				else navigateTask = new NavigateTask(newValue, tasks.peek(), "navigate");
+				tasks.push(navigateTask);
+				taskList.setItems(FXCollections.observableArrayList(tasks));
+			}
+		});
 
 		webView.getEngine().getLoadWorker().stateProperty().addListener((observable, oldValue, newValue) -> {
 			if (newValue == Worker.State.SUCCEEDED)
@@ -108,13 +193,9 @@ public class TaskCreator extends GridPane
 				doc.getDocumentElement().getElementsByTagName("head").item(0).appendChild(styleNode);
 
 				NodeList nodeList = webView.getEngine().getDocument().getElementsByTagName("*");
-				ObservableList<String> obsList = FXCollections.observableArrayList();
 
 				for (int i = 0; i < nodeList.getLength(); i++)
 				{
-					String xPath = NodeUtilities.getXPath(nodeList.item(i));
-					obsList.add(nodeList.item(i).getTextContent() + " || " + xPath);
-
 					NodeUtilities.addOnclick(nodeList.item(i), evt ->
 					{
 						if (selectButton.isSelected())
@@ -131,13 +212,18 @@ public class TaskCreator extends GridPane
 						}
 						else
 						{
+							lastestButtonPressed = "";
 							if (selectedNode != null) ((HTMLElement)selectedNode).setClassName(selectedNodePreviousClass);
 
 							ClickTask clickTask;
 							if (tasks.isEmpty()) clickTask = new ClickTask(NodeUtilities.getXPath((Node)evt.getTarget()), "");
 							else clickTask = new ClickTask(NodeUtilities.getXPath((Node)evt.getTarget()), tasks.peek(), "");
 
-							tasks.push(clickTask);
+							if (tasks.isEmpty() || !Objects.equals(tasks.peek().toString(), clickTask.toString()))
+							{
+								tasks.push(clickTask);
+								taskList.setItems(FXCollections.observableArrayList(tasks));
+							}
 						}
 					});
 				}
@@ -151,27 +237,32 @@ public class TaskCreator extends GridPane
 		add(urlPathField, 1, 2, 1, 1);
 		add(idLabel, 0, 3, 1, 1);
 		add(idField, 1, 3, 1, 1);
-		add(selectButton, 0 , 5, 1, 1);
-		add(domManipButtonHBox, 1, 5);
-		add(taskListLabel, 2, 1);
+		add(nameLabel, 0, 4,1,1);
+		add(nameField, 1, 4,1,1);
+		add(selectButton, 0 , 6, 1, 1);
+		add(domManipButtonHBox, 1, 6, 1, 1);
+		add(taskListLabel, 2, 1, 1, 1);
 		add(buttonHBox, 2, 2, 1, 1);
-		add(taskList, 2, 3, 1, 4);
-		add(webView, 0 ,6, 2, 1);
+		add(taskList, 2, 3, 1, 5);
+		add(webView, 0 ,7, 2, 1);
 
 		textButton.selectedProperty().addListener((observable, oldValue, newValue) ->
 		{
 			urlPathField.setDisable(false);
 			idField.setDisable(false);
+			nameField.setDisable(false);
 		});
 		clickButton.selectedProperty().addListener((observable, oldValue, newValue) ->
 		{
 			urlPathField.setDisable(false);
 			idField.setDisable(true);
+			nameField.setDisable(true);
 		});
 		navigateButton.selectedProperty().addListener((observable, oldValue, newValue) ->
 		{
 			urlPathField.setDisable(false);
 			idField.setDisable(true);
+			nameField.setDisable(true);
 		});
 	}
 }

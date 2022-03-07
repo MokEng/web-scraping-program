@@ -35,4 +35,10 @@ public class ClickTask extends Task
 				.until(ExpectedConditions.presenceOfElementLocated(By.xpath(xPathToElement)));
 		js.executeScript("arguments[0].click();", element);
 	}
+
+	@Override
+	public String toString()
+	{
+		return "Click - " + xPathToElement;
+	}
 }
