@@ -1,3 +1,4 @@
+package se.miun.dt002g.webscraper.scraper;
 
 import org.openqa.selenium.WebDriver;
 

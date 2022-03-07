@@ -1,3 +1,5 @@
+package se.miun.dt002g.webscraper.scraper;
+
 /**
  * Holds all data that wants to be saved from a TextTask.
  */

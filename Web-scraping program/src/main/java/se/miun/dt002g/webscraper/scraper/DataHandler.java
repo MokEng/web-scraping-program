@@ -1,9 +1,10 @@
+package se.miun.dt002g.webscraper.scraper;
+
 import com.github.opendevl.JFlat;
 import com.google.gson.Gson;
 
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;

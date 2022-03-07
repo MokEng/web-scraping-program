@@ -1,3 +1,5 @@
+package se.miun.dt002g.webscraper.scraper;
+
 import java.util.List;
 
 /**

@@ -1,3 +1,5 @@
+package se.miun.dt002g.webscraper.scraper;
+
 import java.io.Serializable;
 
 public final class Pair<T, S> implements Serializable {

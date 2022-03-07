@@ -1,3 +1,5 @@
+package se.miun.dt002g.webscraper.scraper;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;

@@ -1,3 +1,5 @@
+package se.miun.dt002g.webscraper.scraper;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -6,7 +8,6 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.io.Serializable;
-import java.util.*;
 
 /**
  * Abstract class for representing a web-scraping Task.
