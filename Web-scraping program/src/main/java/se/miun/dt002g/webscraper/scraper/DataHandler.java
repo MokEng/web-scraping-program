@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-enum GROUPBY{id,dataName};
+;
 public class DataHandler {
     /**
      * Get all tasks in sitemap, even the ones hidden with decorator pattern.

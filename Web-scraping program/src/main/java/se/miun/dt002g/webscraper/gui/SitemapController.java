@@ -1,14 +1,18 @@
 package se.miun.dt002g.webscraper.gui;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.concurrent.Worker;
+import javafx.geometry.Orientation;
+import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -30,6 +34,7 @@ public class SitemapController extends GridPane
 	List<Sitemap> sitemaps;
 	String sitemapSourceDir;
 	String currentSelectedSitemap;
+	TextArea dataPreview;
 	public SitemapController()
 	{
 		ListView<String> sitemapList = new ListView<>();
@@ -95,21 +100,17 @@ public class SitemapController extends GridPane
 
 		runButton.setOnAction(event -> {
 			Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s.getName(), currentSelectedSitemap)).findAny();
-			if(current.isPresent()){
-				try {
-					current.get().runMultiThreadedScraper(2);
-				} catch (ExecutionException | InterruptedException e) {
-					System.out.println("Something went wrong while scraping..");
-				}
-			}
+			current.ifPresent(sitemap -> runScraper(sitemap, 1));
 		});
 		VBox runButtonVbox = new VBox(5, runButton, scheduleButton);
 
 		ListView<String> taskList = new ListView<>();
-
 		Label selectedSitemapLabel = new Label("Selected Sitemap");
-		selectedSitemapLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
 
+		dataPreview = new TextArea();
+		dataPreview.setPromptText("No data scraped for this task.");
+
+		selectedSitemapLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
 		setVgap(10);
 		setHgap(5);
 		setStyle("-fx-border-insets: 5px; -fx-padding: 5px;");
@@ -120,10 +121,16 @@ public class SitemapController extends GridPane
 		add(selectedSitemapLabel, 2, 0, 2, 1);
 		add(taskList, 2, 1);
 		add(runButtonVbox, 3, 1);
+		add(dataPreview,1,3);
 
 		sitemapList.getSelectionModel().selectedItemProperty().addListener(l->{
 			currentSelectedSitemap = sitemapList.getSelectionModel().getSelectedItem();
-			System.out.println(currentSelectedSitemap);
+			Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s.getName(), currentSelectedSitemap)).findAny();
+			current.ifPresent(sitemap -> taskList.setItems(FXCollections.observableArrayList(sitemap.getTasks().stream().map(Object::toString).toList())));
+			current.ifPresent(sitemap -> {
+				System.out.println("NOW");
+				dataPreview.setText(DataHandler.toJSON(GROUPBY.id, sitemap));
+			});
 		});
 		deleteButton.setOnAction(event -> {
 			SitemapHandler.removeSitemapFile(sitemapSourceDir,currentSelectedSitemap);
@@ -134,12 +141,33 @@ public class SitemapController extends GridPane
 
 		sitemapSourceDir=System.getProperty("user.dir")+"/src/main/resources/";
 		sitemaps = SitemapHandler.loadSitemaps(sitemapSourceDir,new ArrayList<>());
-		System.out.println(sitemaps.get(0).getTasks().size());
 		sitemapList.setItems(FXCollections.observableArrayList(sitemaps.stream().map(Sitemap::getName).toList()));
 	}
 
 	public boolean saveSitemaps(){
 		sitemaps.forEach(Sitemap::clearDataFromTasks);
 		return SitemapHandler.saveSitemaps(sitemapSourceDir,sitemaps);
+	}
+
+	public void runScraper(Sitemap sitemap,int nrOfDrivers){
+		javafx.concurrent.Task<Integer> task = new javafx.concurrent.Task<>() {
+			@Override
+			protected Integer call() throws Exception {
+				//updateMessage("");
+				//updateProgress("iterations", "totalIterations");
+				sitemap.runMultiThreadedScraper(nrOfDrivers);
+				System.out.println(DataHandler.toJSON(GROUPBY.id,sitemap));
+				return 1;
+			}
+		};
+		//stateProperty for Task:
+		task.stateProperty().addListener((observable, oldValue, newValue) -> {
+			if(newValue==Worker.State.SUCCEEDED){
+				System.out.println("Now the scraper has finished.");
+			}
+		});
+
+		//start Task
+		new Thread(task).start();
 	}
 }
