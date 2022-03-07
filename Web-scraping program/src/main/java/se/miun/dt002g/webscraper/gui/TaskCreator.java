@@ -129,7 +129,8 @@ public class TaskCreator extends GridPane
 					});
 				}
 
-				//list.setItems(filteredList);
+				// todo: Add event handler for navigating to new site. Remove Navigate-task radio button.
+				// todo: Remove Back-task radio button. Use <- button instead.
 			}
 		});
 
