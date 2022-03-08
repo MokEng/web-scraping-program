@@ -13,10 +13,15 @@ import javafx.stage.Stage;
 import se.miun.dt002g.webscraper.scraper.Sitemap;
 import se.miun.dt002g.webscraper.scraper.Task;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
 public class TaskController extends GridPane
 {
 	private final String baseURL;
 	private final Sitemap sitemap;
+	private Task selectedTask;
 
 	public TaskController(String url, Sitemap sitemap)
 	{
@@ -49,7 +54,7 @@ public class TaskController extends GridPane
 			addStage.setResizable(false);
 			addStage.initModality(Modality.APPLICATION_MODAL);
 			addStage.setTitle("Create New Task");
-			TaskCreator taskCreator = new TaskCreator(baseURL);
+			TaskCreator taskCreator = new TaskCreator(baseURL, null);
 			addStage.setScene(new Scene(taskCreator));
 			addStage.sizeToScene();
 			addStage.showAndWait();
@@ -61,6 +66,34 @@ public class TaskController extends GridPane
 				list.setItems(FXCollections.observableArrayList(sitemap.getTasks()));
 			}
 		});
+
+		editButton.setOnAction(event ->
+		{
+			Optional<Task> editTask = sitemap.getTasks().stream().filter(t -> Objects.equals(t, selectedTask)).findAny();
+
+			if (editTask.isPresent())
+			{
+				List<Task> tasks = sitemap.getTasks();
+				tasks.remove(editTask.get());
+
+				Stage addStage = new Stage();
+				addStage.setResizable(false);
+				addStage.initModality(Modality.APPLICATION_MODAL);
+				addStage.setTitle("Create New Task");
+				TaskCreator taskCreator = new TaskCreator(baseURL, editTask.get());
+				addStage.setScene(new Scene(taskCreator));
+				addStage.sizeToScene();
+				addStage.showAndWait();
+
+				Task newTask = taskCreator.getTask();
+				if (newTask != null) tasks.add(newTask);
+				list.setItems(FXCollections.observableArrayList(sitemap.getTasks()));
+				list.getSelectionModel().selectFirst();
+			}
+		});
+
+		list.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) ->
+				selectedTask = list.getSelectionModel().getSelectedItem());
 
 		setVgap(10);
 		setHgap(10);

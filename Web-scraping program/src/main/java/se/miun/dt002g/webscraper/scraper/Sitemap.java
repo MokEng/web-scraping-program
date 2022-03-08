@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.concurrent.*;
 
 public class Sitemap implements Serializable {
-    private final List<Task> tasks = new ArrayList<>();
+    private List<Task> tasks = new ArrayList<>();
     private final String rootUrl; // all drivers run from Sitemap starts scraping from rootUrl;
     private String name;
 
@@ -88,6 +88,11 @@ public class Sitemap implements Serializable {
     }
     public List<Task> getTasks(){
         return tasks;
+    }
+
+    public void setTasks(List<Task> tasks)
+    {
+        this.tasks = tasks;
     }
 
 }

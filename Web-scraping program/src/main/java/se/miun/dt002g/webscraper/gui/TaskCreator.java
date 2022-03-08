@@ -17,10 +17,7 @@ import se.miun.dt002g.webscraper.scraper.NavigateTask;
 import se.miun.dt002g.webscraper.scraper.Task;
 import se.miun.dt002g.webscraper.scraper.TextTask;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Stack;
+import java.util.*;
 
 public class TaskCreator extends GridPane
 {
@@ -40,9 +37,10 @@ public class TaskCreator extends GridPane
 
 	private WebView webView;
 
-	public TaskCreator(String url)
+	public TaskCreator(String url, Task editTask)
 	{
-		tasks = new Stack<>();
+		if (editTask == null) tasks = new Stack<>();
+		else tasks = taskToStack(editTask);
 
 		setVgap(5);
 		setHgap(10);
@@ -109,6 +107,7 @@ public class TaskCreator extends GridPane
 		Label taskListLabel = new Label("Task List");
 		taskListLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
 		ListView<Task> taskList = new ListView<>();
+		taskList.setItems(FXCollections.observableArrayList(tasks));
 
 		addButton.setOnAction(event ->
 		{
@@ -347,6 +346,27 @@ public class TaskCreator extends GridPane
 			idField.setDisable(true);
 			nameField.setDisable(true);
 		});
+	}
+
+	private Stack<Task> taskToStack(Task task)
+	{
+		Stack<Task> done = new Stack<>();
+		List<Task> temp = new ArrayList<>();
+
+		Task currTask = task;
+		while (currTask != null)
+		{
+			temp.add(currTask);
+			currTask = currTask.getDoFirst();
+		}
+
+		Collections.reverse(temp);
+		for (Task t : temp)
+		{
+			done.push(t);
+		}
+
+		return done;
 	}
 
 	public Task getTask()
