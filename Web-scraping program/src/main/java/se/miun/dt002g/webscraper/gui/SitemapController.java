@@ -26,18 +26,22 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class SitemapController extends GridPane
 {
 
 	List<Sitemap> sitemaps;
+	List<Sitemap> scrapedSitemaps=new ArrayList<>();
 	String sitemapSourceDir;
 	String currentSelectedSitemap;
 	TextArea dataPreview;
+	ListView<String> sitemapList;
+	ListView<String> taskList;
 	public SitemapController()
 	{
-		ListView<String> sitemapList = new ListView<>();
+		sitemapList = new ListView<>();
 		Label sitemapLabel = new Label("Sitemaps");
 		sitemapLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 20px");
 
@@ -87,6 +91,7 @@ public class SitemapController extends GridPane
 				addStage.setScene(new Scene(new TaskController(current.get().getRootUrl(),current.get())));
 				addStage.sizeToScene();
 				addStage.showAndWait();
+				updateFields();
 			}
 		});
 
@@ -104,7 +109,7 @@ public class SitemapController extends GridPane
 		});
 		VBox runButtonVbox = new VBox(5, runButton, scheduleButton);
 
-		ListView<String> taskList = new ListView<>();
+		taskList = new ListView<>();
 		Label selectedSitemapLabel = new Label("Selected Sitemap");
 
 		dataPreview = new TextArea();
@@ -123,19 +128,13 @@ public class SitemapController extends GridPane
 		add(runButtonVbox, 3, 1);
 		add(dataPreview,1,3);
 
-		sitemapList.getSelectionModel().selectedItemProperty().addListener(l->{
-			currentSelectedSitemap = sitemapList.getSelectionModel().getSelectedItem();
-			Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s.getName(), currentSelectedSitemap)).findAny();
-			current.ifPresent(sitemap -> taskList.setItems(FXCollections.observableArrayList(sitemap.getTasks().stream().map(Object::toString).toList())));
-			current.ifPresent(sitemap -> {
-				System.out.println("NOW");
-				dataPreview.setText(DataHandler.toJSON(GROUPBY.id, sitemap));
-			});
-		});
+		sitemapList.getSelectionModel().selectedItemProperty().addListener(l-> updateFields());
 		deleteButton.setOnAction(event -> {
 			SitemapHandler.removeSitemapFile(sitemapSourceDir,currentSelectedSitemap);
 			sitemaps.removeIf(s-> Objects.equals(s.getName(),currentSelectedSitemap));
 			sitemapList.setItems(FXCollections.observableArrayList(sitemaps.stream().map(Sitemap::getName).toList()));
+			dataPreview.setText("");
+			taskList.setItems(FXCollections.observableArrayList(new ArrayList<>()));
 		});
 
 
@@ -164,10 +163,24 @@ public class SitemapController extends GridPane
 		task.stateProperty().addListener((observable, oldValue, newValue) -> {
 			if(newValue==Worker.State.SUCCEEDED){
 				System.out.println("Now the scraper has finished.");
+				updateFields();
 			}
 		});
 
 		//start Task
 		new Thread(task).start();
+	}
+
+	public void updateFields(){
+		dataPreview.setText("");
+		currentSelectedSitemap = sitemapList.getSelectionModel().getSelectedItem();
+		Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s.getName(), currentSelectedSitemap)).findAny();
+		current.ifPresent(sitemap -> taskList.setItems(FXCollections.observableArrayList(sitemap.getTasks().stream().map(Object::toString).toList())));
+		current.ifPresent(sitemap -> {
+
+			Optional<String> jsonString = DataHandler.toJSONList(GROUPBY.id, sitemap).stream().reduce((s, s2) -> s + ",\n" + s2);
+			jsonString.ifPresent(s -> dataPreview.setText(s));
+
+		});
 	}
 }
