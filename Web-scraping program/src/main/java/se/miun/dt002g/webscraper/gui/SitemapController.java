@@ -115,10 +115,10 @@ public class SitemapController extends GridPane
 			if(currentSelectedSitemap == null){
 				return;
 			}
-			RunScraperPopup runScraperPopup = new RunScraperPopup();
-			if(runScraperPopup.isRunScraper()){
+			RunScraperPopup popup = new RunScraperPopup(currentSelectedSitemap);
+			if(popup.isRunScraper()){
 				Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s.getName(), currentSelectedSitemap)).findAny();
-				current.ifPresent(sitemap -> runScraper(sitemap, 2,runScraperPopup.isSaveOnDevice(), runScraperPopup.isSaveOnDatabase(),runScraperPopup.getLocalDataFormat()));
+				current.ifPresent(sitemap -> runScraper(sitemap, 2,popup.isSaveOnDevice(), popup.isSaveOnDatabase(),popup.getLocalDataFormat(),popup.getGroupby()));
 			}
 		});
 		runButtonVbox = new VBox(5, runButton, scheduleButton);
@@ -189,7 +189,7 @@ public class SitemapController extends GridPane
 		return SitemapHandler.saveSitemaps(sitemapSourceDir,sitemaps);
 	}
 
-	public void runScraper(Sitemap sitemap,int nrOfDrivers,boolean saveLocal,boolean saveDb, DATA_FORMAT dataFormat){
+	public void runScraper(Sitemap sitemap,int nrOfDrivers,boolean saveLocal,boolean saveDb, DATA_FORMAT dataFormat, GROUPBY groupby){
 		javafx.concurrent.Task<Void> task = new javafx.concurrent.Task<>() {
 			@Override
 			protected Void call() throws Exception {
@@ -199,9 +199,9 @@ public class SitemapController extends GridPane
 				sitemap.runMultiThreadedScraper(nrOfDrivers);
 				if(saveLocal){
 					if(dataFormat == DATA_FORMAT.json){
-						DataHandler.toJSONFile(GROUPBY.id,sitemap,defaultStorageLocation+"/"+sitemap.getName()+".json");
+						DataHandler.toJSONFile(groupby,sitemap,defaultStorageLocation+"/"+sitemap.getName()+".json");
 					}else if(dataFormat == DATA_FORMAT.csv){
-						DataHandler.toCSVFile(GROUPBY.id,sitemap,defaultStorageLocation+"/"+sitemap.getName()+".csv");
+						DataHandler.toCSVFile(groupby,sitemap,defaultStorageLocation+"/"+sitemap.getName()+".csv");
 					}
 				}
 
