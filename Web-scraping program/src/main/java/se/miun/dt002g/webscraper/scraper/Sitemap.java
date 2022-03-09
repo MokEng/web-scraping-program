@@ -15,10 +15,15 @@ public class Sitemap implements Serializable {
     private final String rootUrl; // all drivers run from Sitemap starts scraping from rootUrl;
     private String name;
 
+    private boolean running=false;
 
     public Sitemap(String rootUrl,String name){
         this.rootUrl = rootUrl;
         this.name = name;
+    }
+
+    public boolean isRunning(){
+        return running;
     }
 
     public String getRootUrl() {
@@ -40,14 +45,16 @@ public class Sitemap implements Serializable {
         WebDriver driver = new ChromeDriver();
         driver.manage().window().minimize();
         driver.navigate().to(rootUrl);
+        running = true;
         tasks.forEach(p-> { // run all tasks in list
             p.run(driver);
         });
         driver.close();
-        System.out.println("Data scraping is finished.");
+        running =false;
     }
 
     public void runMultiThreadedScraper(int nrOfDrivers) throws ExecutionException, InterruptedException {
+        running = true;
         if(nrOfDrivers > tasks.size()){
             nrOfDrivers = tasks.size();
         }
@@ -72,7 +79,7 @@ public class Sitemap implements Serializable {
             future.get(); // wait for all threads to finish
         }
         pool.shutdown(); // destroy thread-pool
-        System.out.println("Data scraping is finished.");
+        running = false;
     }
 
     public void clearDataFromTasks(){

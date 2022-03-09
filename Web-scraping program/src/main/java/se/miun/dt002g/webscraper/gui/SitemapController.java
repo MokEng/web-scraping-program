@@ -36,9 +36,17 @@ public class SitemapController extends GridPane
 	Label mainLabel;
 	Button okDataStorageButton, openDirectoryChooser;
 	String defaultStorageLocation;
-
+	Button addButton = new Button("New"),
+			editButton = new Button("Edit"),
+			deleteButton = new Button("Delete"),
+			saveButton = new Button("Save");
+	Button runButton = new Button("Run"),
+			scheduleButton = new Button("Schedule");
+	int NR_OF_DRIVERS=2;
 	public SitemapController()
 	{
+		//NR_OF_DRIVERS = Runtime.getRuntime().availableProcessors();
+
 		defaultStorageLocation = System.getProperty("user.dir");
 		menuBar();
 		sitemapList = new ListView<>();
@@ -55,10 +63,7 @@ public class SitemapController extends GridPane
 		add(dataStorageButtonVbox,3,2);
 
 
-		Button addButton = new Button("New"),
-				editButton = new Button("Edit"),
-				deleteButton = new Button("Delete"),
-				saveButton = new Button("Save");
+
 
 		addButton.setMinWidth(50);
 		editButton.setMinWidth(50);
@@ -106,8 +111,7 @@ public class SitemapController extends GridPane
 
 		buttonVBox = new VBox(5, addButton, editButton, deleteButton, saveButton);
 
-		Button runButton = new Button("Run"),
-				scheduleButton = new Button("Schedule");
+
 		runButton.setMinWidth(65);
 		scheduleButton.setMinWidth(65);
 
@@ -195,13 +199,14 @@ public class SitemapController extends GridPane
 			protected Void call() throws Exception {
 				//updateMessage("");
 				//updateProgress("iterations", "totalIterations");
+				//updateFields();
 				sitemap.clearDataFromTasks();
 				sitemap.runMultiThreadedScraper(nrOfDrivers);
 				if(saveLocal){
 					if(dataFormat == DATA_FORMAT.json){
-						DataHandler.toJSONFile(groupby,sitemap,defaultStorageLocation+"/"+sitemap.getName()+".json");
+						DataHandler.toJSONFile(groupby,sitemap,defaultStorageLocation+"/"+sitemap.getName().substring(0,sitemap.getName().indexOf("[")-1)+".json");
 					}else if(dataFormat == DATA_FORMAT.csv){
-						DataHandler.toCSVFile(groupby,sitemap,defaultStorageLocation+"/"+sitemap.getName()+".csv");
+						DataHandler.toCSVFile(groupby,sitemap,defaultStorageLocation+"/"+sitemap.getName().substring(0,sitemap.getName().indexOf("[")-1)+".csv");
 					}
 				}
 
@@ -213,6 +218,15 @@ public class SitemapController extends GridPane
 		task.stateProperty().addListener((observable, oldValue, newValue) -> {
 			if(newValue==Worker.State.SUCCEEDED){
 				System.out.println("Now the scraper has finished.");
+				sitemap.setName(sitemap.getName().substring(0,sitemap.getName().indexOf("[")-1));
+				updateSitemapListView();
+				updateFields();
+			}
+			if(newValue == Worker.State.RUNNING){
+				System.out.println("RUNNING");
+				sitemap.setName(sitemap.getName()+" [Running]");
+
+				updateSitemapListView();
 				updateFields();
 			}
 		});
@@ -223,15 +237,24 @@ public class SitemapController extends GridPane
 
 	public void updateFields(){
 		dataPreview.setText("");
+		taskList.getItems().clear();
 		currentSelectedSitemap = sitemapList.getSelectionModel().getSelectedItem();
+		editButton.setDisable(false);
+		runButton.setDisable(false);
 		Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s.getName(), currentSelectedSitemap)).findAny();
-		current.ifPresent(sitemap -> taskList.setItems(FXCollections.observableArrayList(sitemap.getTasks().stream().map(Object::toString).toList())));
 		current.ifPresent(sitemap -> {
-
+			taskList.setItems(FXCollections.observableArrayList(sitemap.getTasks().stream().map(Object::toString).toList()));
 			Optional<String> jsonString = DataHandler.toJSONList(GROUPBY.id, sitemap).stream().reduce((s, s2) -> s + ",\n" + s2);
 			jsonString.ifPresent(s -> dataPreview.setText(s));
-
+			editButton.setDisable(sitemap.isRunning());
+			runButton.setDisable(sitemap.isRunning());
 		});
+
+
+	}
+
+	public void updateSitemapListView(){
+		sitemapList.setItems(FXCollections.observableArrayList(sitemaps.stream().map(Sitemap::getName).toList()));
 	}
 
 	public void menuBar(){
