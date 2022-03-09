@@ -199,9 +199,9 @@ public class SitemapController extends GridPane
 				sitemap.runMultiThreadedScraper(nrOfDrivers);
 				if(saveLocal){
 					if(dataFormat == DATA_FORMAT.json){
-						DataHandler.toJSONFile(GROUPBY.id,sitemap,defaultStorageLocation+sitemap.getName()+".json");
+						DataHandler.toJSONFile(GROUPBY.id,sitemap,defaultStorageLocation+"/"+sitemap.getName()+".json");
 					}else if(dataFormat == DATA_FORMAT.csv){
-						DataHandler.toCSVFile(GROUPBY.id,sitemap,defaultStorageLocation+sitemap.getName()+".csv");
+						DataHandler.toCSVFile(GROUPBY.id,sitemap,defaultStorageLocation+"/"+sitemap.getName()+".csv");
 					}
 				}
 
