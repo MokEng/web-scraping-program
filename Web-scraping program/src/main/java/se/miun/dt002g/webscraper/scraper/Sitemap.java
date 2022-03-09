@@ -54,6 +54,9 @@ public class Sitemap implements Serializable {
     }
 
     public void runMultiThreadedScraper(int nrOfDrivers) throws ExecutionException, InterruptedException {
+        if(tasks.isEmpty()){
+            return;
+        }
         running = true;
         if(nrOfDrivers > tasks.size()){
             nrOfDrivers = tasks.size();

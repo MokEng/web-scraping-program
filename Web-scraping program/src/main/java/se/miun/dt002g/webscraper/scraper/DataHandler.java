@@ -75,6 +75,9 @@ public class DataHandler {
      * @return a string in JSON format.
      */
     public static String toJSON(GROUPBY groupby, Sitemap sitemap){
+        if(sitemap.getTasks().isEmpty()){
+            return "[]";
+        }
         Map<String, List<TextTask>> map = groupTextTasksBy(groupby,sitemap);
         AtomicInteger s1 = new AtomicInteger(map.size());
         AtomicReference<String> jsonString = new AtomicReference<>("[");

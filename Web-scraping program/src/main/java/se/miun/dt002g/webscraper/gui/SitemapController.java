@@ -248,6 +248,8 @@ public class SitemapController extends GridPane
 			jsonString.ifPresent(s -> dataPreview.setText(s));
 			editButton.setDisable(sitemap.isRunning());
 			runButton.setDisable(sitemap.isRunning());
+			deleteButton.setDisable(sitemap.isRunning());
+			runButton.setDisable(sitemap.getTasks().isEmpty());
 		});
 
 
