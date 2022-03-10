@@ -92,6 +92,20 @@ public class TaskController extends GridPane
 			}
 		});
 
+		deleteButton.setOnAction(event ->
+		{
+			Optional<Task> removeTask = sitemap.getTasks().stream().filter(t -> Objects.equals(t, selectedTask)).findAny();
+
+			if (removeTask.isPresent())
+			{
+				List<Task> tasks = sitemap.getTasks();
+				tasks.remove(removeTask.get());
+
+				list.setItems(FXCollections.observableArrayList(sitemap.getTasks()));
+				list.getSelectionModel().selectFirst();
+			}
+		});
+
 		list.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) ->
 				selectedTask = list.getSelectionModel().getSelectedItem());
 
