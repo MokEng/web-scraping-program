@@ -84,7 +84,8 @@ public class TaskCreator extends GridPane
 		{
 			if (!newValue && selectedNode != null)
 			{
-				((HTMLElement)selectedNode).setClassName(selectedNodePreviousClass);
+				//((HTMLElement)selectedNode).setClassName(selectedNodePreviousClass);
+				deselectNodes();
 			}
 		});
 
@@ -211,9 +212,6 @@ public class TaskCreator extends GridPane
 		});
 		webView.getEngine().locationProperty().addListener((observable, oldValue, newValue) ->
 		{
-			selectedNodes = null;
-			selectedNode = null;
-			selectedNodePreviousClass = null;
 			if (!tasks.isEmpty() && !lastestButtonPressed.equals("remove"))
 			{
 				tasks.pop();
@@ -243,9 +241,8 @@ public class TaskCreator extends GridPane
 					{
 						if (selectButton.isSelected())
 						{
-							if (selectedNode != null) ((HTMLElement)selectedNode).setClassName(selectedNodePreviousClass);
+							deselectNodes();
 
-							selectedNodes = null;
 							selectedNode = (Node)evt.getTarget();
 							selectedNodePreviousClass = ((HTMLElement)selectedNode).getClassName();
 							((HTMLElement)selectedNode).setClassName(selectedNodePreviousClass + " selectedNode");
@@ -257,7 +254,7 @@ public class TaskCreator extends GridPane
 						else
 						{
 							lastestButtonPressed = "";
-							if (selectedNode != null) ((HTMLElement)selectedNode).setClassName(selectedNodePreviousClass);
+							deselectNodes();
 
 							ClickTask clickTask;
 							if (tasks.isEmpty()) clickTask = new ClickTask(NodeUtilities.getXPath((Node)evt.getTarget()), "");
@@ -283,15 +280,14 @@ public class TaskCreator extends GridPane
 
 			if (nChildren > 0)
 			{
+				deselectNodes();
 				selectedNodes = new ArrayList<>();
 
 				for (int i = 0; i < nChildren; i++)
 				{
-					selectedNodes.add(children.item(i));
+					if (!children.item(i).getNodeName().equals("#text")) selectedNodes.add(children.item(i));
 				}
 
-				// todo: Selected nodes should be get the "selectedNode" class removed on next click.
-				((HTMLElement)selectedNode).setClassName(selectedNodePreviousClass);
 				for (Node n : selectedNodes)
 				{
 					HTMLElement e = (HTMLElement)n;
@@ -309,14 +305,15 @@ public class TaskCreator extends GridPane
 
 			if (nSiblings > 0)
 			{
+				deselectNodes();
 				selectedNodes = new ArrayList<>();
 
 				for (int i = 0; i < nSiblings; i++)
 				{
-					selectedNodes.add(siblings.item(i));
+					if (!siblings.item(i).getNodeName().equals("#text")) selectedNodes.add(siblings.item(i));
 				}
 
-				((HTMLElement)selectedNode).setClassName(selectedNodePreviousClass);
+				//((HTMLElement)selectedNode).setClassName(selectedNodePreviousClass);
 				for (Node n : selectedNodes)
 				{
 					HTMLElement e = (HTMLElement)n;
@@ -361,6 +358,29 @@ public class TaskCreator extends GridPane
 			idField.setDisable(true);
 			nameField.setDisable(true);
 		});
+	}
+
+	private void deselectNodes()
+	{
+		if (selectedNode != null)
+		{
+			HTMLElement e = (HTMLElement)selectedNode;
+			if (e.getClassName().contains("selectedNode"))
+				e.setClassName(e.getClassName().substring(0, e.getClassName().lastIndexOf(" ")));
+			selectedNode = null;
+		}
+
+		if (selectedNodes != null)
+		{
+			for (Node n : selectedNodes)
+			{
+				HTMLElement e = (HTMLElement)n;
+				if (e.getClassName().contains("selectedNode"))
+					e.setClassName(e.getClassName().substring(0, e.getClassName().lastIndexOf(" ")));
+			}
+
+			selectedNodes = null;
+		}
 	}
 
 	private Stack<Task> taskToStack(Task task)
