@@ -84,7 +84,6 @@ public class TaskCreator extends GridPane
 		{
 			if (!newValue && selectedNode != null)
 			{
-				//((HTMLElement)selectedNode).setClassName(selectedNodePreviousClass);
 				deselectNodes();
 			}
 		});
@@ -94,7 +93,9 @@ public class TaskCreator extends GridPane
 		Button selectChildrenButton = new Button("Select Children");
 		selectChildrenButton.setMinWidth(50);
 		Button selectSiblingsButton = new Button("Select Siblings");
-		HBox domManipButtonHBox = new HBox(5, backArrowButton, selectChildrenButton, selectSiblingsButton);
+		Button selectParentButton = new Button("Select Parent");
+		selectParentButton.setMinWidth(50);
+		HBox domManipButtonHBox = new HBox(5, backArrowButton, selectChildrenButton, selectSiblingsButton, selectParentButton);
 
 		Button addButton = new Button("Add Task"),
 				removeButton = new Button("Remove Task"),
@@ -275,26 +276,29 @@ public class TaskCreator extends GridPane
 
 		selectChildrenButton.setOnAction(event ->
 		{
-			NodeList children = selectedNode.getChildNodes();
-			int nChildren = children.getLength();
-
-			if (nChildren > 0)
+			if (selectedNode != null)
 			{
-				deselectNodes();
-				selectedNodes = new ArrayList<>();
+				NodeList children = selectedNode.getChildNodes();
+				int nChildren = children.getLength();
 
-				for (int i = 0; i < nChildren; i++)
+				if (nChildren > 0)
 				{
-					if (!children.item(i).getNodeName().equals("#text")) selectedNodes.add(children.item(i));
-				}
+					deselectNodes();
+					selectedNodes = new ArrayList<>();
 
-				for (Node n : selectedNodes)
-				{
-					HTMLElement e = (HTMLElement)n;
-					e.setClassName(e.getClassName() + " selectedNode");
-				}
+					for (int i = 0; i < nChildren; i++)
+					{
+						if (!children.item(i).getNodeName().equals("#text")) selectedNodes.add(children.item(i));
+					}
 
-				urlPathField.setText("<Multiple values>");
+					for (Node n : selectedNodes)
+					{
+						HTMLElement e = (HTMLElement)n;
+						e.setClassName(e.getClassName() + " selectedNode");
+					}
+
+					urlPathField.setText("<Multiple values>");
+				}
 			}
 		});
 
@@ -313,7 +317,6 @@ public class TaskCreator extends GridPane
 					if (!siblings.item(i).getNodeName().equals("#text")) selectedNodes.add(siblings.item(i));
 				}
 
-				//((HTMLElement)selectedNode).setClassName(selectedNodePreviousClass);
 				for (Node n : selectedNodes)
 				{
 					HTMLElement e = (HTMLElement)n;
@@ -321,6 +324,28 @@ public class TaskCreator extends GridPane
 				}
 
 				urlPathField.setText("<Multiple values>");
+			}
+		});
+
+		selectParentButton.setOnAction(event ->
+		{
+			if (selectedNode != null)
+			{
+				Node n = selectedNode.getParentNode();
+				deselectNodes();
+				selectedNode = n;
+				HTMLElement e = (HTMLElement)selectedNode;
+				e.setClassName(e.getClassName() + " selectedNode");
+				urlPathField.setText(NodeUtilities.getXPath(selectedNode));
+			}
+			else if (selectedNodes != null && selectedNodes.size() != 0)
+			{
+				Node n = selectedNodes.get(0).getParentNode();
+				deselectNodes();
+				selectedNode = n;
+				HTMLElement e = (HTMLElement)selectedNode;
+				e.setClassName(e.getClassName() + " selectedNode");
+				urlPathField.setText(NodeUtilities.getXPath(selectedNode));
 			}
 		});
 
@@ -365,7 +390,7 @@ public class TaskCreator extends GridPane
 		if (selectedNode != null)
 		{
 			HTMLElement e = (HTMLElement)selectedNode;
-			if (e.getClassName().contains("selectedNode"))
+			if (e != null && e.getClassName().contains("selectedNode"))
 				e.setClassName(e.getClassName().substring(0, e.getClassName().lastIndexOf(" ")));
 			selectedNode = null;
 		}
@@ -375,7 +400,7 @@ public class TaskCreator extends GridPane
 			for (Node n : selectedNodes)
 			{
 				HTMLElement e = (HTMLElement)n;
-				if (e.getClassName().contains("selectedNode"))
+				if (e != null && e.getClassName().contains("selectedNode"))
 					e.setClassName(e.getClassName().substring(0, e.getClassName().lastIndexOf(" ")));
 			}
 
