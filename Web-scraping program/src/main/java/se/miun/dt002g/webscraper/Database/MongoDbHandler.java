@@ -1,5 +1,5 @@
 package se.miun.dt002g.webscraper.Database;
-/*
+
 import com.mongodb.MongoWriteException;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.MongoClients;
@@ -59,4 +59,4 @@ public class MongoDbHandler {
         }
         return true;
     }
-}*/
+}
