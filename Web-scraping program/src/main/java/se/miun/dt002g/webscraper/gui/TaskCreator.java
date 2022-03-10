@@ -290,6 +290,14 @@ public class TaskCreator extends GridPane
 					selectedNodes.add(children.item(i));
 				}
 
+				// todo: Selected nodes should be get the "selectedNode" class removed on next click.
+				((HTMLElement)selectedNode).setClassName(selectedNodePreviousClass);
+				for (Node n : selectedNodes)
+				{
+					HTMLElement e = (HTMLElement)n;
+					e.setClassName(e.getClassName() + " selectedNode");
+				}
+
 				urlPathField.setText("<Multiple values>");
 			}
 		});
@@ -306,6 +314,13 @@ public class TaskCreator extends GridPane
 				for (int i = 0; i < nSiblings; i++)
 				{
 					selectedNodes.add(siblings.item(i));
+				}
+
+				((HTMLElement)selectedNode).setClassName(selectedNodePreviousClass);
+				for (Node n : selectedNodes)
+				{
+					HTMLElement e = (HTMLElement)n;
+					e.setClassName(e.getClassName() + " selectedNode");
 				}
 
 				urlPathField.setText("<Multiple values>");
