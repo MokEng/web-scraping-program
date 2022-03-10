@@ -6,19 +6,15 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import se.miun.dt002g.webscraper.scraper.*;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public class SitemapController extends GridPane
 {
+	Map<String, String> settings;
 
 	List<Sitemap> sitemaps;
 	String sitemapSourceDir;
@@ -46,6 +42,7 @@ public class SitemapController extends GridPane
 	public SitemapController()
 	{
 		//NR_OF_DRIVERS = Runtime.getRuntime().availableProcessors();
+		settings = new HashMap<>();
 
 		defaultStorageLocation = System.getProperty("user.dir");
 		menuBar();
@@ -55,15 +52,10 @@ public class SitemapController extends GridPane
 
 		okDataStorageButton = new Button("Ok");
 		okDataStorageButton.setMinWidth(60);
-		okDataStorageButton.setOnAction(event -> {
-			showStorage(false);
-		});
+		okDataStorageButton.setOnAction(event -> showStorage(false));
 		dataStorageButtonVbox = new VBox(5,okDataStorageButton);
 		dataStorageButtonVbox.setVisible(false);
 		add(dataStorageButtonVbox,3,2);
-
-
-
 
 		addButton.setMinWidth(50);
 		editButton.setMinWidth(50);
@@ -72,7 +64,7 @@ public class SitemapController extends GridPane
 
 		addButton.setOnAction(event ->
 		{
-			String baseURL = null,sitemapName=null;
+			String baseURL, sitemapName;
 			EnterBaseURLPopup popup = new EnterBaseURLPopup();
 			baseURL = popup.getBaseURL();
 			sitemapName = popup.getSitemapName();
@@ -107,10 +99,8 @@ public class SitemapController extends GridPane
 				updateFields();
 			}
 		});
-		
 
 		buttonVBox = new VBox(5, addButton, editButton, deleteButton, saveButton);
-
 
 		runButton.setMinWidth(65);
 		scheduleButton.setMinWidth(65);
@@ -145,30 +135,6 @@ public class SitemapController extends GridPane
 		add(taskList, 2, 3);
 		add(runButtonVbox, 3, 3);
 		add(dataPreview,1,5);
-		// STORAGE BUTTON
-		dataStorageLabel = new Label("Local storage location");
-		dataStorageLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16px");
-		openDirectoryChooser = new Button("Open");
-		openDirectoryChooser.setOnAction(event -> {
-			DirectoryChooser directoryChooser = new DirectoryChooser();
-			directoryChooser.setInitialDirectory(new File(defaultStorageLocation));
-			try{
-				defaultStorageLocation = directoryChooser.showDialog(new Stage()).getAbsolutePath();
-				chosenLocation.setText(defaultStorageLocation);
-				System.out.println(defaultStorageLocation);
-			}catch(Exception e){
-				System.out.println(defaultStorageLocation);
-			}
-
-		});
-
-		chosenLocation = new TextField(defaultStorageLocation);
-		chosenLocation.setDisable(true);
-		chosenLocation.setMinWidth(60);
-
-		dataStorageConfigVbox = new VBox(10, dataStorageLabel, chosenLocation,openDirectoryChooser);
-		dataStorageConfigVbox.setVisible(false);
-		add(dataStorageConfigVbox,2,2,1,1);
 
 		sitemapList.getSelectionModel().selectedItemProperty().addListener(l-> updateFields());
 
@@ -180,9 +146,6 @@ public class SitemapController extends GridPane
 			taskList.setItems(FXCollections.observableArrayList(new ArrayList<>()));
 		});
 
-		
-
-
 		sitemapSourceDir=System.getProperty("user.dir")+"/src/main/resources/";
 		sitemaps = SitemapHandler.loadSitemaps(sitemapSourceDir,new ArrayList<>());
 		sitemapList.setItems(FXCollections.observableArrayList(sitemaps.stream().map(Sitemap::getName).toList()));
@@ -193,7 +156,7 @@ public class SitemapController extends GridPane
 		return SitemapHandler.saveSitemaps(sitemapSourceDir,sitemaps);
 	}
 
-	public void runScraper(Sitemap sitemap,int nrOfDrivers,boolean saveLocal,boolean saveDb, DATA_FORMAT dataFormat, GROUPBY groupby){
+	private void runScraper(Sitemap sitemap,int nrOfDrivers,boolean saveLocal,boolean saveDb, DATA_FORMAT dataFormat, GROUPBY groupby){
 		javafx.concurrent.Task<Void> task = new javafx.concurrent.Task<>() {
 			@Override
 			protected Void call() throws Exception {
@@ -235,7 +198,7 @@ public class SitemapController extends GridPane
 		new Thread(task).start();
 	}
 
-	public void updateFields(){
+	private void updateFields(){
 		dataPreview.setText("");
 		taskList.getItems().clear();
 		currentSelectedSitemap = sitemapList.getSelectionModel().getSelectedItem();
@@ -251,29 +214,29 @@ public class SitemapController extends GridPane
 			deleteButton.setDisable(sitemap.isRunning());
 			runButton.setDisable(sitemap.getTasks().isEmpty());
 		});
-
-
 	}
 
-	public void updateSitemapListView(){
+	private void updateSitemapListView(){
 		sitemapList.setItems(FXCollections.observableArrayList(sitemaps.stream().map(Sitemap::getName).toList()));
 	}
 
-	public void menuBar(){
+	private void menuBar(){
 		//creating menu bar
 		MenuBar menuBar=new MenuBar();
 		//creating menu for adding menu items
 		Menu menu=new Menu("File");
 		//creating menu items
-		MenuItem configureDataStorage=new MenuItem("Configure data storage");
-		configureDataStorage.setOnAction(event -> {
-			showStorage(true);
+		MenuItem settingsButton =new MenuItem("Settings");
+		settingsButton.setOnAction(event -> {
+			//showStorage(true);
+			SettingsController settingsController = new SettingsController(settings);
+			settings = settingsController.getSettings();
 		});
-		MenuItem sitemapFromFile=new MenuItem("Load sitemap from file");
-		MenuItem quitWebScraperApp=new MenuItem("Quit Web Scraper App");
+		MenuItem sitemapFromFile=new MenuItem("Load Sitemap");
+		MenuItem quitWebScraperApp=new MenuItem("Quit App");
 		quitWebScraperApp.setStyle("-fx-font-weight: bold; -fx-font-size: 12px");
 		//adding menu items to the menu
-		menu.getItems().add(configureDataStorage);
+		menu.getItems().add(settingsButton);
 		menu.getItems().add(sitemapFromFile);
 		menu.getItems().add(new SeparatorMenuItem());
 		menu.getItems().add(quitWebScraperApp);
@@ -284,7 +247,7 @@ public class SitemapController extends GridPane
 		add(vBox,0,0,4,2);
 	}
 	
-	public void showStorage(boolean showStorage){
+	private void showStorage(boolean showStorage){
 
 		buttonVBox.setVisible(!showStorage);
 		runButtonVbox.setVisible(!showStorage);
