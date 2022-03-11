@@ -11,6 +11,7 @@ import se.miun.dt002g.webscraper.database.MongoDbHandler;
 import se.miun.dt002g.webscraper.scraper.DATA_FORMAT;
 import se.miun.dt002g.webscraper.scraper.GROUPBY;
 
+import java.util.Map;
 import java.util.Objects;
 
 public class RunScraperPopup {
@@ -47,7 +48,7 @@ public class RunScraperPopup {
 
     private DATA_FORMAT localDataFormat= DATA_FORMAT.json;
 
-    public RunScraperPopup(String sitemapName, MongoDbHandler mongoDbHandler)
+    public RunScraperPopup(String sitemapName,MongoDbHandler mongoDbHandler, Map<String,String> settings)
     {
         GridPane mainPane = new GridPane();
         mainPane.setStyle("-fx-border-insets: 5px; -fx-padding: 5px;");
@@ -88,10 +89,10 @@ public class RunScraperPopup {
         databaseSettingsLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
 
         Label databaseNameLabel = new Label("Database: ");
-        TextField databaseNameTextField= new TextField("");
+        TextField databaseNameTextField= new TextField(settings.get("latestDb"));
 
         Label collectionNameLabel = new Label("Collection: ");
-        TextField collectionNameTextField = new TextField("");
+        TextField collectionNameTextField = new TextField(settings.get("latestColl"));
         RadioButton dropPreviousData = new RadioButton("Drop previous data in collection");
 
 
@@ -139,6 +140,8 @@ public class RunScraperPopup {
             dbSettings.dropPreviousData = dropPreviousData.isSelected();
             dbSettings.collectionName = collectionNameTextField.getText();
             dbSettings.databaseName = databaseNameTextField.getText();
+            settings.put("latestDb",databaseNameTextField.getText());
+            settings.put("latestColl",collectionNameTextField.getText());
             if ((saveOnDevice || saveOnDatabase)) {
                 runScraper = true;
                 runScraperStage.close();

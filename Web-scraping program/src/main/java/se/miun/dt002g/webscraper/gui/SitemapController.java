@@ -108,11 +108,12 @@ public class SitemapController extends GridPane
 			if(currentSelectedSitemap == null){
 				return;
 			}
-			RunScraperPopup popup = new RunScraperPopup(currentSelectedSitemap,mongoDbHandler);
+			RunScraperPopup popup = new RunScraperPopup(currentSelectedSitemap,mongoDbHandler,settings);
 			if(popup.isRunScraper()){
 				Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s.getName(), currentSelectedSitemap)).findAny();
-				current.ifPresent(sitemap -> runScraper(sitemap, 2,popup.isSaveOnDevice(), popup.isSaveOnDatabase(),popup.getLocalDataFormat(),popup.getGroupby(),popup.getDbSettings()));
+				current.ifPresent(sitemap -> runScraper(sitemap, popup.isSaveOnDevice(), popup.isSaveOnDatabase(),popup.getLocalDataFormat(),popup.getGroupby(),popup.getDbSettings()));
 			}
+
 		});
 		runButtonVbox = new VBox(5, runButton, scheduleButton);
 
@@ -155,7 +156,7 @@ public class SitemapController extends GridPane
 		return SitemapHandler.saveSitemaps(sitemapSourceDir,sitemaps);
 	}
 
-	private void runScraper(Sitemap sitemap, int nrOfDrivers, boolean saveLocal, boolean saveDb, DATA_FORMAT dataFormat, GROUPBY groupby, DbStorageSettings dbStorageSettings){
+	private void runScraper(Sitemap sitemap, boolean saveLocal, boolean saveDb, DATA_FORMAT dataFormat, GROUPBY groupby, DbStorageSettings dbStorageSettings){
 		javafx.concurrent.Task<Void> task = new javafx.concurrent.Task<>() {
 			@Override
 			protected Void call() throws Exception {
@@ -163,7 +164,7 @@ public class SitemapController extends GridPane
 				//updateProgress("iterations", "totalIterations");
 				//updateFields();
 				sitemap.clearDataFromTasks();
-				sitemap.runMultiThreadedScraper(nrOfDrivers);
+				sitemap.runMultiThreadedScraper(NR_OF_DRIVERS);
 				if(saveLocal){
 					if(dataFormat == DATA_FORMAT.json){
 						DataHandler.toJSONFile(groupby,sitemap,defaultStorageLocation+"/"+sitemap.getName().substring(0,sitemap.getName().indexOf("[")-1)+".json");
@@ -235,6 +236,7 @@ public class SitemapController extends GridPane
 			//showStorage(true);
 			SettingsController settingsController = new SettingsController(settings,mongoDbHandler);
 			settings = settingsController.getSettings();
+			NR_OF_DRIVERS = Integer.parseInt(String.valueOf(settings.get("threadAmount")));
 		});
 		MenuItem sitemapFromFile=new MenuItem("Load Sitemap");
 		MenuItem quitWebScraperApp=new MenuItem("Quit App");
