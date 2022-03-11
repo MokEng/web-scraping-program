@@ -1,34 +1,76 @@
 package se.miun.dt002g.webscraper.Database;
 
-import com.mongodb.MongoWriteException;
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.BulkWriteOptions;
 import com.mongodb.client.model.InsertOneModel;
+import com.mongodb.event.ServerHeartbeatFailedEvent;
+import com.mongodb.event.ServerHeartbeatStartedEvent;
+import com.mongodb.event.ServerHeartbeatSucceededEvent;
+import com.mongodb.event.ServerMonitorListener;
 import org.bson.Document;
-import se.miun.dt002g.webscraper.scraper.DataHandler;
-import se.miun.dt002g.webscraper.scraper.Pair;
-import se.miun.dt002g.webscraper.scraper.Sitemap;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MongoDbHandler {
     com.mongodb.client.MongoClient client;
+    public String getConnectionString() {
+        return connectionString;
+    }
+
+    String connectionString = null;
+    boolean isConnected = false;
 
     public boolean tryConnect(String connectionString){
+        if(client!=null){
+            client.close();
+        }
         try{
-            client = MongoClients.create(connectionString);
+            client = MongoClients.create(MongoClientSettings.builder()
+                    .applyConnectionString(new ConnectionString(connectionString))
+                    .applyToServerSettings(builder -> builder.addServerMonitorListener(new ServerMonitorListener() {
+                        @Override
+                        public void serverHearbeatStarted(ServerHeartbeatStartedEvent event) {
+                            isConnected = true;
+                            System.out.println("isConnected = true @1");
+                        }
+
+                        @Override
+                        public void serverHeartbeatSucceeded(ServerHeartbeatSucceededEvent event) {
+                            isConnected = true;
+                            System.out.println("isConnected = true @2");
+                        }
+
+                        @Override
+                        public void serverHeartbeatFailed(ServerHeartbeatFailedEvent event) {
+                            isConnected = false;
+                            System.out.println("isConnected = false @3");
+                        }
+                    })).build());
+
         }catch(Exception e ){
-            e.printStackTrace();
+            client = null;
+            this.connectionString = "";
+            isConnected = false;
             return false;
+        }
+        if(isConnected){
+            this.connectionString = connectionString;
         }
         return true;
     }
 
+    public boolean isConnected(){
+        return isConnected;
+    }
+
     public boolean storeJsonInDb(DbStorageSettings settings, List<String> jsonStrings){
+
         try{
             MongoDatabase database = client.getDatabase(settings.databaseName);
             MongoCollection<Document> coll = database.getCollection(settings.collectionName);
@@ -55,6 +97,7 @@ public class MongoDbHandler {
             }
         }catch(Exception e){
             e.printStackTrace();
+            client = null;
             return false;
         }
         return true;

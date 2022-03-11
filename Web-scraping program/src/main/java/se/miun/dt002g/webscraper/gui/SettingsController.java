@@ -11,6 +11,7 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import se.miun.dt002g.webscraper.Database.MongoDbHandler;
 
 import java.io.File;
 import java.util.*;
@@ -29,7 +30,7 @@ public class SettingsController
 	private ObservableList<String> exesInDir = null;
 	private final Map<String, String> settings;
 
-	public SettingsController(Map<String, String> settingsMap)
+	public SettingsController(Map<String, String> settingsMap, MongoDbHandler mongoDbHandler)
 	{
 		settings = settingsMap;
 		defaultStorageLocation = System.getProperty("user.dir");
@@ -67,6 +68,34 @@ public class SettingsController
 			catch (Exception ignored) {}
 		});
 
+		// ------------------------- Database Config ----------------------------------------
+		Label databaseLabel = new Label("MongoDb Connection String: ");
+		TextField connectionStringField = new TextField("");
+		connectionStringField.setMinWidth(60);
+		Button tryConnectButton = new Button("Connect");
+		Label connectMessageLabel = new Label("");
+
+		if(mongoDbHandler.isConnected()){
+			connectMessageLabel.setText("Connected to database");
+			connectMessageLabel.setStyle("-fx-background-color: lightgreen;");
+			connectionStringField.setText(mongoDbHandler.getConnectionString());
+		}else{
+			connectMessageLabel.setText("Not connected to database");
+			connectMessageLabel.setStyle("-fx-background-color: red;");
+		}
+
+		tryConnectButton.setOnAction(event -> {
+			String text = connectionStringField.getText();
+			if(mongoDbHandler.tryConnect(text)){
+				connectMessageLabel.setText("Connected to database");
+				connectMessageLabel.setStyle("-fx-background-color: lightgreen;");
+			}else{
+				connectMessageLabel.setText("Failed to connect to database");
+				connectMessageLabel.setStyle("-fx-background-color: red;");
+			}
+		});
+
+
 		// ------------------------- Driver selection ----------------------------------------
 		Label webdriverLabel = new Label("Web Driver ");
 		webdriverLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
@@ -100,11 +129,17 @@ public class SettingsController
 				}
 			}
 		});
-
+		// Local storage config
 		mainPane.add(settingsHeaderLabel, 0, 0, 3, 1);
 		mainPane.add(storageLocationLabel, 0, 1);
 		mainPane.add(storageLocationField, 1, 1);
 		mainPane.add(selectDirectoryButton, 2, 1);
+		// Database config
+		mainPane.add(databaseLabel,0,2);
+		mainPane.add(connectionStringField,1,2);
+		mainPane.add(tryConnectButton,2,2);
+		mainPane.add(connectMessageLabel,3,2);
+		// Web driver config
 		mainPane.add(webdriverLabel, 0, 3);
 		mainPane.add(webdriverComboBox, 1, 3, 2, 1);
 
@@ -127,5 +162,12 @@ public class SettingsController
 
 		exesInDir = FXCollections.observableArrayList(fileNames);
 		exesInDir.add("Safari");
+	}
+	private void connectToDatabase(String connectionString, MongoDbHandler mongoDbHandler){
+		if(mongoDbHandler.tryConnect(connectionString)){
+			System.out.println("Connected to database");
+		}else{
+			System.out.println("Failed to connect to database");
+		}
 	}
 }

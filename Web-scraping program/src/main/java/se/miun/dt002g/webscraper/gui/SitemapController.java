@@ -8,6 +8,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import se.miun.dt002g.webscraper.Database.DbStorageSettings;
+import se.miun.dt002g.webscraper.Database.MongoDbHandler;
 import se.miun.dt002g.webscraper.scraper.*;
 
 import java.util.*;
@@ -30,7 +32,6 @@ public class SitemapController extends GridPane
 	VBox dataStorageButtonVbox;
 	VBox dataStorageConfigVbox;
 	Label mainLabel;
-	Button okDataStorageButton, openDirectoryChooser;
 	String defaultStorageLocation;
 	Button addButton = new Button("New"),
 			editButton = new Button("Edit"),
@@ -39,6 +40,9 @@ public class SitemapController extends GridPane
 	Button runButton = new Button("Run"),
 			scheduleButton = new Button("Schedule");
 	int NR_OF_DRIVERS=2;
+	MongoDbHandler mongoDbHandler = new MongoDbHandler();
+
+
 	public SitemapController()
 	{
 		//NR_OF_DRIVERS = Runtime.getRuntime().availableProcessors();
@@ -50,12 +54,7 @@ public class SitemapController extends GridPane
 		mainLabel = new Label("Sitemaps");
 		mainLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 20px");
 
-		okDataStorageButton = new Button("Ok");
-		okDataStorageButton.setMinWidth(60);
-		okDataStorageButton.setOnAction(event -> showStorage(false));
-		dataStorageButtonVbox = new VBox(5,okDataStorageButton);
-		dataStorageButtonVbox.setVisible(false);
-		add(dataStorageButtonVbox,3,2);
+
 
 		addButton.setMinWidth(50);
 		editButton.setMinWidth(50);
@@ -109,10 +108,10 @@ public class SitemapController extends GridPane
 			if(currentSelectedSitemap == null){
 				return;
 			}
-			RunScraperPopup popup = new RunScraperPopup(currentSelectedSitemap);
+			RunScraperPopup popup = new RunScraperPopup(currentSelectedSitemap,mongoDbHandler);
 			if(popup.isRunScraper()){
 				Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s.getName(), currentSelectedSitemap)).findAny();
-				current.ifPresent(sitemap -> runScraper(sitemap, 2,popup.isSaveOnDevice(), popup.isSaveOnDatabase(),popup.getLocalDataFormat(),popup.getGroupby()));
+				current.ifPresent(sitemap -> runScraper(sitemap, 2,popup.isSaveOnDevice(), popup.isSaveOnDatabase(),popup.getLocalDataFormat(),popup.getGroupby(),popup.getDbSettings()));
 			}
 		});
 		runButtonVbox = new VBox(5, runButton, scheduleButton);
@@ -156,7 +155,7 @@ public class SitemapController extends GridPane
 		return SitemapHandler.saveSitemaps(sitemapSourceDir,sitemaps);
 	}
 
-	private void runScraper(Sitemap sitemap,int nrOfDrivers,boolean saveLocal,boolean saveDb, DATA_FORMAT dataFormat, GROUPBY groupby){
+	private void runScraper(Sitemap sitemap, int nrOfDrivers, boolean saveLocal, boolean saveDb, DATA_FORMAT dataFormat, GROUPBY groupby, DbStorageSettings dbStorageSettings){
 		javafx.concurrent.Task<Void> task = new javafx.concurrent.Task<>() {
 			@Override
 			protected Void call() throws Exception {
@@ -171,6 +170,11 @@ public class SitemapController extends GridPane
 					}else if(dataFormat == DATA_FORMAT.csv){
 						DataHandler.toCSVFile(groupby,sitemap,defaultStorageLocation+"/"+sitemap.getName().substring(0,sitemap.getName().indexOf("[")-1)+".csv");
 					}
+				}
+				if(saveDb){
+					if(mongoDbHandler.storeJsonInDb(dbStorageSettings,DataHandler.toJSONList(groupby,sitemap))){
+						System.out.println("Saved data to MongoDb");
+					};
 				}
 
 				System.out.println(DataHandler.toJSON(GROUPBY.id,sitemap));
@@ -229,7 +233,7 @@ public class SitemapController extends GridPane
 		MenuItem settingsButton =new MenuItem("Settings");
 		settingsButton.setOnAction(event -> {
 			//showStorage(true);
-			SettingsController settingsController = new SettingsController(settings);
+			SettingsController settingsController = new SettingsController(settings,mongoDbHandler);
 			settings = settingsController.getSettings();
 		});
 		MenuItem sitemapFromFile=new MenuItem("Load Sitemap");
@@ -246,22 +250,6 @@ public class SitemapController extends GridPane
 		VBox vBox=new VBox(menuBar);
 		add(vBox,0,0,4,2);
 	}
-	
-	private void showStorage(boolean showStorage){
 
-		buttonVBox.setVisible(!showStorage);
-		runButtonVbox.setVisible(!showStorage);
-		sitemapList.setVisible(!showStorage);
-		taskList.setVisible(!showStorage);
-		dataPreview.setVisible(!showStorage);
-		selectedSitemapLabel.setVisible(!showStorage);
-		dataStorageConfigVbox.setVisible(showStorage);
-		dataStorageButtonVbox.setVisible(showStorage);
-		if(showStorage){
-			mainLabel.setText("Configure Storage");
-			return;
-		}
-		mainLabel.setText("Sitemaps");
-	}
 	
 }
