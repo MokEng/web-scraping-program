@@ -63,8 +63,14 @@ public class RunScraperPopup {
         dataFormatLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
         RadioButton localButton = new RadioButton("Local Storage");
         RadioButton databaseButton = new RadioButton("MongoDb");
+        Label dbIsConnectedLabel= new Label("");
         if(!mongoDbHandler.isConnected()){
             databaseButton.setDisable(true);
+            dbIsConnectedLabel.setText("Not connected to database");
+            dbIsConnectedLabel.setStyle("-fx-background-color: red;");
+        }else{
+            dbIsConnectedLabel.setText("Connected");
+            dbIsConnectedLabel.setStyle("-fx-background-color: lightgreen;");
         }
 
         ChoiceBox<String> formatPicker = new ChoiceBox<>();
@@ -82,31 +88,38 @@ public class RunScraperPopup {
         databaseSettingsLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
 
         Label databaseNameLabel = new Label("Database: ");
-        TextField databaseNameTextField= new TextField("<DATABASE_NAME>");
+        TextField databaseNameTextField= new TextField("");
 
         Label collectionNameLabel = new Label("Collection: ");
-        TextField collectionNameTextField = new TextField("<COLLECTION_NAME>");
+        TextField collectionNameTextField = new TextField("");
         RadioButton dropPreviousData = new RadioButton("Drop previous data in collection");
 
 
         Button runButton = new Button("Run");
         Button cancelButton = new Button("Cancel");
-        HBox hBox = new HBox(5, chooseStorageLabel, localButton,databaseButton,dataFormatLabel,formatPicker,groupByLabel,groupPicker, runButton,cancelButton);
-        //®mainPane.add(chooseStorageLabel,0,0);
         mainPane.add(localButton,0,0);
+
         mainPane.add(dataFormatLabel,0,1);
         mainPane.add(formatPicker,1,1);
+
         mainPane.add(new Separator(),0,2,5,1);
+
         mainPane.add(groupByLabel,0,3);
         mainPane.add(groupPicker,1,3);
+
         mainPane.add(new Separator(),0,4,5,1);
+
         mainPane.add(databaseButton,0,5);
+        mainPane.add(dbIsConnectedLabel,1,5);
+
         mainPane.add(databaseNameLabel,0,6);
         mainPane.add(databaseNameTextField,1,6);
         mainPane.add(collectionNameLabel,2,6);
         mainPane.add(collectionNameTextField,3,6);
         mainPane.add(dropPreviousData,4,6);
+
         mainPane.add(new Separator(),0,7,5,1);
+
         mainPane.add(runButton,0,8);
         mainPane.add(cancelButton,1,8);
 
@@ -135,7 +148,7 @@ public class RunScraperPopup {
             runScraper=false;
             runScraperStage.close();
         });
-        hBox.setStyle("-fx-border-insets: 5px; -fx-padding: 5px; -fx-label-padding: 10px;");
+        mainPane.setStyle("-fx-border-insets: 5px; -fx-padding: 5px; -fx-label-padding: 10px;");
         runScraperStage.setScene(new Scene(mainPane));
         runScraperStage.showAndWait();
     }
