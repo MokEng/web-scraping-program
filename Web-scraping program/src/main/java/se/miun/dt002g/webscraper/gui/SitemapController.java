@@ -1,18 +1,27 @@
 package se.miun.dt002g.webscraper.gui;
 
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
+import javafx.concurrent.ScheduledService;
+import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
+import javafx.concurrent.WorkerStateEvent;
+import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import se.miun.dt002g.webscraper.database.DbStorageSettings;
 import se.miun.dt002g.webscraper.database.MongoDbHandler;
 import se.miun.dt002g.webscraper.scraper.*;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SitemapController extends GridPane
 {
@@ -39,7 +48,7 @@ public class SitemapController extends GridPane
 			saveButton = new Button("Save");
 	Button runButton = new Button("Run"),
 			scheduleButton = new Button("Schedule");
-	int NR_OF_DRIVERS=2;
+	int NR_OF_DRIVERS=1;
 	MongoDbHandler mongoDbHandler = new MongoDbHandler();
 
 
@@ -111,7 +120,10 @@ public class SitemapController extends GridPane
 			RunScraperPopup popup = new RunScraperPopup(currentSelectedSitemap,mongoDbHandler,settings);
 			if(popup.isRunScraper()){
 				Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s.getName(), currentSelectedSitemap)).findAny();
-				current.ifPresent(sitemap -> runScraper(sitemap, popup.isSaveOnDevice(), popup.isSaveOnDatabase(),popup.getLocalDataFormat(),popup.getGroupby(),popup.getDbSettings()));
+				ScrapeSettings scrapeSettings = popup.getScrapeSettings();
+				scrapeSettings.localStorageLocation = defaultStorageLocation;
+				scrapeSettings.NO_DRIVERS = NR_OF_DRIVERS;
+				current.ifPresent(sitemap -> scheduleScraper(sitemap,scrapeSettings,mongoDbHandler,Duration.seconds(0),Duration.seconds(0),0));
 			}
 
 		});
@@ -154,53 +166,6 @@ public class SitemapController extends GridPane
 	public boolean saveSitemaps(){
 		sitemaps.forEach(Sitemap::clearDataFromTasks);
 		return SitemapHandler.saveSitemaps(sitemapSourceDir,sitemaps);
-	}
-
-	private void runScraper(Sitemap sitemap, boolean saveLocal, boolean saveDb, DATA_FORMAT dataFormat, GROUPBY groupby, DbStorageSettings dbStorageSettings){
-		javafx.concurrent.Task<Void> task = new javafx.concurrent.Task<>() {
-			@Override
-			protected Void call() throws Exception {
-				//updateMessage("");
-				//updateProgress("iterations", "totalIterations");
-				//updateFields();
-				sitemap.clearDataFromTasks();
-				sitemap.runMultiThreadedScraper(NR_OF_DRIVERS);
-				if(saveLocal){
-					if(dataFormat == DATA_FORMAT.json){
-						DataHandler.toJSONFile(groupby,sitemap,defaultStorageLocation+"/"+sitemap.getName().substring(0,sitemap.getName().indexOf("[")-1)+".json");
-					}else if(dataFormat == DATA_FORMAT.csv){
-						DataHandler.toCSVFile(groupby,sitemap,defaultStorageLocation+"/"+sitemap.getName().substring(0,sitemap.getName().indexOf("[")-1)+".csv");
-					}
-				}
-				if(saveDb){
-					if(mongoDbHandler.storeJsonInDb(dbStorageSettings,DataHandler.toJSONList(groupby,sitemap))){
-						System.out.println("Saved data to MongoDb");
-					};
-				}
-
-				System.out.println(DataHandler.toJSON(GROUPBY.id,sitemap));
-				return null;
-			}
-		};
-		//stateProperty for Task:
-		task.stateProperty().addListener((observable, oldValue, newValue) -> {
-			if(newValue==Worker.State.SUCCEEDED){
-				System.out.println("Now the scraper has finished.");
-				sitemap.setName(sitemap.getName().substring(0,sitemap.getName().indexOf("[")-1));
-				updateSitemapListView();
-				updateFields();
-			}
-			if(newValue == Worker.State.RUNNING){
-				System.out.println("RUNNING");
-				sitemap.setName(sitemap.getName()+" [Running]");
-
-				updateSitemapListView();
-				updateFields();
-			}
-		});
-
-		//start Task
-		new Thread(task).start();
 	}
 
 	private void updateFields(){
@@ -253,5 +218,91 @@ public class SitemapController extends GridPane
 		add(vBox,0,0,4,2);
 	}
 
-	
+	/**
+	 * Schedules a sitemap to be scraped.
+	 * @param sitemap, the sitemap to be scraped
+	 * @param settings, the settings for the scrape
+	 * @param mongoDbHandler, for writing to mongodb
+	 * @param interval, how long between repetitions
+	 * @param firstStart, how long before the first repetition is started
+	 * @param repetitions, how many times should this task run
+	 */
+	private void scheduleScraper(Sitemap sitemap,ScrapeSettings settings,MongoDbHandler mongoDbHandler,Duration interval,Duration firstStart,int repetitions){
+		TimerService service = new TimerService(sitemap,settings,mongoDbHandler); // create new Timer-object
+		AtomicInteger count = new AtomicInteger(0);
+		service.setCount(count.get());
+		service.setDelay(Duration.seconds(firstStart.toSeconds())); // set start time of first scrape
+		service.setPeriod(Duration.seconds(interval.toSeconds())); // set the interval between scrapers
+		service.setOnSucceeded(t -> { // when a scrape has succeeded
+			System.out.println("Called : " + t.getSource().getValue()
+					+ " time(s)");
+			if(repetitions <= (Integer)t.getSource().getValue()){ // cancel new scrape if it has reached max repetitions
+				t.getSource().cancel();
+			}
+			count.set((int) t.getSource().getValue());
+			sitemap.setName(sitemap.getName().substring(0,sitemap.getName().indexOf("[")-1));
+			updateSitemapListView();
+			updateFields();
+		});
+		service.setOnScheduled(t->{ // when a scrape is scheduled
+			if(sitemap.isRunning()){ // if a sitemap is already running, cancel this scheduled task
+				t.getSource().cancel();
+			}
+		});
+		service.setOnRunning(t->{ // when a scrape is running
+			sitemap.setName(sitemap.getName()+" [Running]");
+			updateSitemapListView();
+			updateFields();
+		});
+		service.start();
+	}
+
+
+
+	private static class TimerService extends ScheduledService<Integer> {
+		Sitemap sitemap;
+		ScrapeSettings settings;
+		MongoDbHandler mongoDbHandler;
+		TimerService(Sitemap sitemap,ScrapeSettings settings,MongoDbHandler mongoDbHandler){
+			this.sitemap = sitemap;
+			this.settings = settings;
+			this.mongoDbHandler = mongoDbHandler;
+		}
+		private IntegerProperty count = new SimpleIntegerProperty();
+
+		public final void setCount(Integer value) {
+			count.set(value);
+		}
+		public final Integer getCount() {
+			return count.get();
+		}
+		public final IntegerProperty countProperty() {
+			return count;
+		}
+		protected Task<Integer> createTask() {
+			return new Task<>() {
+				protected Integer call() {
+					sitemap.clearDataFromTasks();
+					try {
+						sitemap.runMultiThreadedScraper(settings.NO_DRIVERS);
+					} catch (ExecutionException | InterruptedException e) {
+						e.printStackTrace();
+					}
+					if (settings.saveLocal) {
+						if (settings.dataFormat == DATA_FORMAT.json) {
+							DataHandler.toJSONFile(settings.groupby, sitemap, settings.localStorageLocation + "/" + sitemap.getName().substring(0, sitemap.getName().indexOf("[") - 1) + ".json");
+						} else if (settings.dataFormat == DATA_FORMAT.csv) {
+							DataHandler.toCSVFile(settings.groupby, sitemap, settings.localStorageLocation + "/" + sitemap.getName().substring(0, sitemap.getName().indexOf("[") - 1) + ".csv");
+						}
+					}
+					if (settings.saveDb) {
+						mongoDbHandler.storeJsonInDb(settings.dbStorageSettings, DataHandler.toJSONList(settings.groupby, sitemap));
+					}
+					//Adds 1 to the count
+					count.set(getCount() + 1);
+					return getCount();
+				}
+			};
+		}
+	}
 }

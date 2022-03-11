@@ -156,5 +156,16 @@ public class RunScraperPopup {
         runScraperStage.showAndWait();
     }
 
+
+
+    public ScrapeSettings getScrapeSettings() {
+        ScrapeSettings scrapeSettings = new ScrapeSettings();
+        scrapeSettings.saveLocal = saveOnDevice;
+        scrapeSettings.saveDb = saveOnDatabase;
+        scrapeSettings.groupby = groupby;
+        scrapeSettings.dbStorageSettings = dbSettings;
+        scrapeSettings.dataFormat = localDataFormat;
+        return scrapeSettings;
+    }
 }
 
