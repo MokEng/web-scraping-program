@@ -3,10 +3,7 @@ package se.miun.dt002g.webscraper.gui;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
@@ -70,6 +67,7 @@ public class SettingsController
 
 		// ------------------------- Database Config ----------------------------------------
 		Label databaseLabel = new Label("MongoDb Connection String: ");
+		databaseLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
 		TextField connectionStringField = new TextField("");
 		connectionStringField.setMinWidth(60);
 		Button tryConnectButton = new Button("Connect");
@@ -103,6 +101,8 @@ public class SettingsController
 
 		getExesFromDriverDir();
 		webdriverComboBox.setItems(exesInDir);
+		if (settings.containsKey("driver")) webdriverComboBox.getSelectionModel().select(settings.get("driver"));
+		else webdriverComboBox.getSelectionModel().select(0);
 		webdriverComboBox.valueProperty().addListener((observable, oldValue, newValue) ->
 		{
 			switch (newValue)
@@ -129,6 +129,20 @@ public class SettingsController
 				}
 			}
 		});
+
+		// ------------------------- Driver amount -------------------------------------------
+		int threadAmount = settings.containsKey("threadAmount") ? Integer.parseInt(settings.get("threadAmount")) : 1;
+		Label driverAmountLabel = new Label("No. of Drivers");
+		driverAmountLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
+		Slider driverAmountSlider = new Slider(1, Runtime.getRuntime().availableProcessors(), threadAmount);
+		driverAmountSlider.setMajorTickUnit(1);
+		driverAmountSlider.setMinorTickCount(0);
+		driverAmountSlider.setShowTickLabels(true);
+		driverAmountSlider.setShowTickMarks(true);
+		driverAmountSlider.setSnapToTicks(true);
+		driverAmountSlider.valueProperty().addListener((observable, oldValue, newValue) ->
+				settings.put("threadAmount", Integer.toString((int) driverAmountSlider.getValue())));
+
 		// Local storage config
 		mainPane.add(settingsHeaderLabel, 0, 0, 3, 1);
 		mainPane.add(storageLocationLabel, 0, 1);
@@ -142,6 +156,9 @@ public class SettingsController
 		// Web driver config
 		mainPane.add(webdriverLabel, 0, 3);
 		mainPane.add(webdriverComboBox, 1, 3, 2, 1);
+		// Driver amount config
+		mainPane.add(driverAmountLabel, 0, 4);
+		mainPane.add(driverAmountSlider, 1, 4, 3, 1);
 
 		settingsStage.setScene(new Scene(mainPane));
 		settingsStage.sizeToScene();
@@ -163,10 +180,15 @@ public class SettingsController
 		exesInDir = FXCollections.observableArrayList(fileNames);
 		exesInDir.add("Safari");
 	}
-	private void connectToDatabase(String connectionString, MongoDbHandler mongoDbHandler){
-		if(mongoDbHandler.tryConnect(connectionString)){
+
+	private void connectToDatabase(String connectionString, MongoDbHandler mongoDbHandler)
+	{
+		if(mongoDbHandler.tryConnect(connectionString))
+		{
 			System.out.println("Connected to database");
-		}else{
+		}
+		else
+		{
 			System.out.println("Failed to connect to database");
 		}
 	}
