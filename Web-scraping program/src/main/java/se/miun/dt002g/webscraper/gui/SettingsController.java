@@ -88,7 +88,7 @@ public class SettingsController
 				connectMessageLabel.setText("Connected to database");
 				connectMessageLabel.setStyle("-fx-background-color: lightgreen;");
 			}else{
-				connectMessageLabel.setText("Failed to connect to database");
+				connectMessageLabel.setText("Connection failed");
 				connectMessageLabel.setStyle("-fx-background-color: red;");
 			}
 		});
@@ -189,7 +189,7 @@ public class SettingsController
 		}
 		else
 		{
-			System.out.println("Failed to connect to database");
+			System.out.println("Conncection");
 		}
 	}
 }

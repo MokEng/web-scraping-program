@@ -52,8 +52,16 @@ public class MongoDbHandler {
                             System.out.println("isConnected = false @3");
                         }
                     })).build());
+            // Temporary until I figure out how to check if credentials are OK.
+            MongoDatabase database = client.getDatabase("test");
+            MongoCollection<Document> coll = database.getCollection("test");
+            coll.drop();
 
         }catch(Exception e ){
+            e.printStackTrace();
+            if(client != null){
+                client.close();
+            }
             client = null;
             this.connectionString = "";
             isConnected = false;
