@@ -1,6 +1,4 @@
-package se.miun.dt002g.webscraper.Database;
-
-import se.miun.dt002g.webscraper.scraper.GROUPBY;
+package se.miun.dt002g.webscraper.database;
 
 public class DbStorageSettings {
     public String databaseName;

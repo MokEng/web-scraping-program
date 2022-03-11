@@ -8,8 +8,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import se.miun.dt002g.webscraper.Database.DbStorageSettings;
-import se.miun.dt002g.webscraper.Database.MongoDbHandler;
+import se.miun.dt002g.webscraper.database.DbStorageSettings;
+import se.miun.dt002g.webscraper.database.MongoDbHandler;
 import se.miun.dt002g.webscraper.scraper.*;
 
 import java.util.*;

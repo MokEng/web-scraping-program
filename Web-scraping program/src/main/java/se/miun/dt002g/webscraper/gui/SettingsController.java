@@ -8,7 +8,7 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import se.miun.dt002g.webscraper.Database.MongoDbHandler;
+import se.miun.dt002g.webscraper.database.MongoDbHandler;
 
 import java.io.File;
 import java.util.*;

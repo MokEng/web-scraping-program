@@ -1,4 +1,4 @@
-package se.miun.dt002g.webscraper.Database;
+package se.miun.dt002g.webscraper.database;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
