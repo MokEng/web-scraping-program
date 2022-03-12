@@ -2,10 +2,7 @@ package se.miun.dt002g.webscraper.gui;
 
 import javafx.collections.FXCollections;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -35,6 +32,8 @@ public class TaskController extends GridPane
 		TextField baseURLField = new TextField();
 		baseURLField.setText(url);
 		baseURLField.setEditable(false);
+		Tooltip baseURLFieldTooltip = new Tooltip("The URL all tasks in the sitemap start from");
+		baseURLField.setTooltip(baseURLFieldTooltip);
 
 		Button addButton = new Button("Add"),
 				editButton = new Button("Edit"),
@@ -43,6 +42,12 @@ public class TaskController extends GridPane
 		addButton.setMinWidth(50);
 		editButton.setMinWidth(50);
 		deleteButton.setMinWidth(50);
+		Tooltip addButtonTooltip = new Tooltip("Add new task"),
+				editButtonTooltip = new Tooltip("Edit task"),
+				deleteButtonTooltip = new Tooltip("Delete task");
+		addButton.setTooltip(addButtonTooltip);
+		editButton.setTooltip(editButtonTooltip);
+		deleteButton.setTooltip(deleteButtonTooltip);
 
 		VBox buttonVBox = new VBox(5, addButton, editButton, deleteButton);
 
