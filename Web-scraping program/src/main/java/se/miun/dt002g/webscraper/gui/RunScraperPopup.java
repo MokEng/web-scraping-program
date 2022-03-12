@@ -19,34 +19,10 @@ public class RunScraperPopup {
         return runScraper;
     }
 
-    public boolean isSaveOnDevice() {
-        return saveOnDevice;
-    }
-
-    public boolean isSaveOnDatabase() {
-        return saveOnDatabase;
-    }
-
-    public int getNrOfWebDrivers() {
-        return nrOfWebDrivers;
-    }
-    public DbStorageSettings getDbSettings(){return dbSettings;}
-
     private boolean runScraper=false;
-    private boolean saveOnDevice=false;
-    private boolean saveOnDatabase=false;
-    private int nrOfWebDrivers=1;
     private DbStorageSettings dbSettings = new DbStorageSettings();
-    public GROUPBY getGroupby() {
-        return groupby;
-    }
 
-    private GROUPBY groupby = GROUPBY.id;
-    public DATA_FORMAT getLocalDataFormat() {
-        return localDataFormat;
-    }
-
-    private DATA_FORMAT localDataFormat= DATA_FORMAT.json;
+    private ScrapeSettings scrapeSettings = new ScrapeSettings();
 
     public RunScraperPopup(String sitemapName,MongoDbHandler mongoDbHandler, Map<String,String> settings)
     {
@@ -125,24 +101,26 @@ public class RunScraperPopup {
         mainPane.add(cancelButton,1,8);
 
         runButton.setOnAction(event1 -> {
-            saveOnDevice = localButton.isSelected();
-            saveOnDatabase = databaseButton.isSelected();
+
+            scrapeSettings.saveLocal = localButton.isSelected();
+            scrapeSettings.saveDb = databaseButton.isSelected();
             if(Objects.equals(formatPicker.getSelectionModel().getSelectedItem(), DATA_FORMAT.json.name())){
-                this.localDataFormat = DATA_FORMAT.json;
+                scrapeSettings.dataFormat = DATA_FORMAT.json;
             }else{
-                this.localDataFormat = DATA_FORMAT.csv;
+                scrapeSettings.dataFormat = DATA_FORMAT.csv;
             }
             if(Objects.equals(groupPicker.getSelectionModel().getSelectedItem(), GROUPBY.id.name())){
-                this.groupby = GROUPBY.id;
+                scrapeSettings.groupby = GROUPBY.id;
             }else{
-                this.groupby = GROUPBY.dataName;
+                scrapeSettings.groupby = GROUPBY.dataName;
             }
             dbSettings.dropPreviousData = dropPreviousData.isSelected();
             dbSettings.collectionName = collectionNameTextField.getText();
             dbSettings.databaseName = databaseNameTextField.getText();
+
             settings.put("latestDb",databaseNameTextField.getText());
             settings.put("latestColl",collectionNameTextField.getText());
-            if ((saveOnDevice || saveOnDatabase)) {
+            if ((scrapeSettings.saveLocal || scrapeSettings.saveDb)) {
                 runScraper = true;
                 runScraperStage.close();
             }
@@ -157,14 +135,8 @@ public class RunScraperPopup {
     }
 
 
-
     public ScrapeSettings getScrapeSettings() {
-        ScrapeSettings scrapeSettings = new ScrapeSettings();
-        scrapeSettings.saveLocal = saveOnDevice;
-        scrapeSettings.saveDb = saveOnDatabase;
-        scrapeSettings.groupby = groupby;
         scrapeSettings.dbStorageSettings = dbSettings;
-        scrapeSettings.dataFormat = localDataFormat;
         return scrapeSettings;
     }
 }

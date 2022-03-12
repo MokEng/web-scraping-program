@@ -52,6 +52,7 @@ public class SitemapController extends GridPane
 	public SitemapController()
 	{
 		//NR_OF_DRIVERS = Runtime.getRuntime().availableProcessors();
+		System.out.println(System.getProperty("os.name"));
 		settings = new HashMap<>();
 		setDriverSystemProperties();
 
@@ -181,6 +182,7 @@ public class SitemapController extends GridPane
 
 	public boolean saveSitemaps(){
 		sitemaps.forEach(Sitemap::clearDataFromTasks);
+		sitemaps.forEach(s-> s.setRunning(false));
 		return SitemapHandler.saveSitemaps(sitemapSourceDir,sitemaps);
 	}
 

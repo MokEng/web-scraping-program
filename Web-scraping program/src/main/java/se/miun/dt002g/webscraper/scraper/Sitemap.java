@@ -15,6 +15,11 @@ public class Sitemap implements Serializable {
     private final String rootUrl; // all drivers run from Sitemap starts scraping from rootUrl;
     private String name;
 
+
+    public void setRunning(boolean running) {
+        this.running = running;
+    }
+
     private boolean running=false;
 
     public Sitemap(String rootUrl,String name){
