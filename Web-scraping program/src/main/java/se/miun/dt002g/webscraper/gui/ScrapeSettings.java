@@ -5,6 +5,7 @@ import se.miun.dt002g.webscraper.scraper.DATA_FORMAT;
 import se.miun.dt002g.webscraper.scraper.GROUPBY;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 
 public class ScrapeSettings {
     boolean saveLocal;
@@ -14,8 +15,9 @@ public class ScrapeSettings {
     DbStorageSettings dbStorageSettings;
     int NO_DRIVERS;
     String localStorageLocation;
-    javafx.util.Duration interval,firstStart;
+    java.time.Duration interval,firstStart;
     int repetitions;
+    LocalDateTime startAt;
 
     public ScrapeSettings(){};
 

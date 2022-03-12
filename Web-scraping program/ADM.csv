@@ -1,3 +1,0 @@
-/groupedBy,/taskData/id,/taskData/dataname,/taskData/data
-"dataName","1","description","Every Java application has a single instance of class Runtime that allows the application to interface with the environment in which the application is running. The current runtime can be obtained from the getRuntime method."
-"dataName","1","class","public class Runtime\nextends Object"

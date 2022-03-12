@@ -16,6 +16,7 @@ import se.miun.dt002g.webscraper.database.MongoDbHandler;
 import se.miun.dt002g.webscraper.scraper.*;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -23,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SitemapController extends GridPane
 {
 	Map<String, String> settings;
-
+	List<TimerService> scheduledScrapes=new ArrayList<>();
 	List<Sitemap> sitemaps;
 	String sitemapSourceDir;
 	String currentSelectedSitemap;
@@ -109,6 +110,21 @@ public class SitemapController extends GridPane
 
 		runButton.setMinWidth(65);
 		scheduleButton.setMinWidth(65);
+		scheduleButton.setOnAction(event ->{
+			if(currentSelectedSitemap == null){
+				return;
+			}
+			ScheduleScraperPopup popup = new ScheduleScraperPopup(currentSelectedSitemap,mongoDbHandler,settings);
+			if(popup.isRunScraper()){
+				Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s.getName(), currentSelectedSitemap)).findAny();
+				ScrapeSettings scrapeSettings = popup.getScrapeSettings();
+				scrapeSettings.localStorageLocation = defaultStorageLocation;
+				scrapeSettings.NO_DRIVERS = NR_OF_DRIVERS;
+				scrapeSettings.repetitions = 0;
+				scrapeSettings.interval = java.time.Duration.ofSeconds(0);
+				current.ifPresent(sitemap -> scheduleScraper(sitemap,scrapeSettings,mongoDbHandler));
+			}
+		});
 
 		runButton.setOnAction(event -> {
 			if(currentSelectedSitemap == null){
@@ -121,8 +137,9 @@ public class SitemapController extends GridPane
 				scrapeSettings.localStorageLocation = defaultStorageLocation;
 				scrapeSettings.NO_DRIVERS = NR_OF_DRIVERS;
 				scrapeSettings.repetitions = 0;
-				scrapeSettings.firstStart = Duration.seconds(0);
-				scrapeSettings.interval = Duration.seconds(0);
+				scrapeSettings.firstStart = java.time.Duration.ofSeconds(0);
+				scrapeSettings.interval = java.time.Duration.ofSeconds(0);
+				scrapeSettings.startAt = LocalDateTime.now();
 				current.ifPresent(sitemap -> scheduleScraper(sitemap,scrapeSettings,mongoDbHandler));
 			}
 
@@ -222,11 +239,17 @@ public class SitemapController extends GridPane
 			NR_OF_DRIVERS = Integer.parseInt(String.valueOf(settings.get("threadAmount")));
 		});
 		MenuItem sitemapFromFile=new MenuItem("Load Sitemap");
+		MenuItem scheduledScraper = new MenuItem("Scheduled Scrapes");
+		scheduledScraper.setOnAction(event -> {
+			ScheduledScrapersController s = new ScheduledScrapersController(scheduledScrapes);
+
+		});
 		MenuItem quitWebScraperApp=new MenuItem("Quit App");
 		quitWebScraperApp.setStyle("-fx-font-weight: bold; -fx-font-size: 12px");
 		//adding menu items to the menu
 		menu.getItems().add(settingsButton);
 		menu.getItems().add(sitemapFromFile);
+		menu.getItems().add(scheduledScraper);
 		menu.getItems().add(new SeparatorMenuItem());
 		menu.getItems().add(quitWebScraperApp);
 		//adding menu to the menu bar
@@ -243,10 +266,15 @@ public class SitemapController extends GridPane
 	 * @param mongoDbHandler, for writing to mongodb
 	 */
 	private void scheduleScraper(Sitemap sitemap,ScrapeSettings settings,MongoDbHandler mongoDbHandler){
+
+		java.time.Duration startIn = java.time.Duration.between(LocalDateTime.now(),settings.startAt);
+		if(settings.startAt.isBefore(LocalDateTime.now())){
+			startIn = java.time.Duration.ofSeconds(0);
+		}
 		TimerService service = new TimerService(sitemap,settings,mongoDbHandler); // create new Timer-object
 		AtomicInteger count = new AtomicInteger(0);
 		service.setCount(count.get());
-		service.setDelay(Duration.seconds(settings.firstStart.toSeconds())); // set start time of first scrape
+		service.setDelay(Duration.seconds(startIn.toSeconds())); // set start time of first scrape
 		service.setPeriod(Duration.seconds(settings.interval.toSeconds())); // set the interval between scrapers
 		service.setOnSucceeded(t -> { // when a scrape has succeeded
 			System.out.println("Called : " + t.getSource().getValue()
@@ -258,6 +286,9 @@ public class SitemapController extends GridPane
 			sitemap.setName(sitemap.getName().substring(0,sitemap.getName().indexOf("[")-1));
 			updateSitemapListView();
 			updateFields();
+			for(int x = 0 ; x < scheduledScrapes.size();x++){
+				scheduledScrapes.removeIf(timerService -> timerService.equals(service));
+			}
 		});
 		service.setOnScheduled(t->{ // when a scrape is scheduled
 			if(sitemap.isRunning()){ // if a sitemap is already running, cancel this scheduled task
@@ -270,9 +301,13 @@ public class SitemapController extends GridPane
 			updateFields();
 		});
 		service.start();
+		if(startIn==java.time.Duration.ofSeconds(0)){
+			return;
+		}
+		scheduledScrapes.add(service);
 	}
 
-	private static class TimerService extends ScheduledService<Integer> {
+	public static class TimerService extends ScheduledService<Integer> {
 		Sitemap sitemap;
 		ScrapeSettings settings;
 		MongoDbHandler mongoDbHandler;
@@ -316,6 +351,10 @@ public class SitemapController extends GridPane
 					return getCount();
 				}
 			};
+		}
+		public String toString(){
+			return new String("Sitemap:"+sitemap.getName()+
+					"\nExecute at:"+settings.startAt.toString());
 		}
 	}
 }
