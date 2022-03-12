@@ -32,6 +32,10 @@ public class EnterBaseURLPopup
 			{
 				baseURL = enterBaseURLField.getText();
 				sitemapName = enterSitemapNameField.getText();
+				if (!baseURL.startsWith("http://") && !baseURL.startsWith("https://"))
+				{
+					baseURL = "https://" + baseURL; // Add https to url if not provided by the user.
+				}
 				baseURLStage.close();
 			}
 		});
