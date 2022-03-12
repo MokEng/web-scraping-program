@@ -52,3 +52,4 @@ build/
 # Project specific
 /Web-scraping program/src/resources/drivers
 !/Web-scraping program/gradle/wrapper/gradle-wrapper.jar
+.sm
