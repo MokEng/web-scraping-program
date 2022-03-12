@@ -4,14 +4,23 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import se.miun.dt002g.webscraper.database.MongoDbHandler;
 
+import java.awt.*;
 import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
+import java.util.List;
 
 public class SettingsController
 {
@@ -98,6 +107,22 @@ public class SettingsController
 		Label webdriverLabel = new Label("Web Driver ");
 		webdriverLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
 		ComboBox<String> webdriverComboBox = new ComboBox<>();
+		Hyperlink driversLink = new Hyperlink("Get more drivers");
+		driversLink.setOnAction(event ->
+		{
+			if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
+			{
+				try
+				{
+					Desktop.getDesktop().browse(new URI("https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/#quick-reference"));
+				}
+				catch (IOException | URISyntaxException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		});
+		HBox driversHBox = new HBox(5, webdriverComboBox, driversLink);
 
 		getExesFromDriverDir();
 		webdriverComboBox.setItems(exesInDir);
@@ -107,26 +132,11 @@ public class SettingsController
 		{
 			switch (newValue)
 			{
-				case "Google Chrome" ->
-				{
-					// todo: Change system property and update settings map.
-				}
-				case "Mozilla Firefox" ->
-				{
-
-				}
-				case "Microsoft Edge" ->
-				{
-
-				}
-				case "Internet Explorer" ->
-				{
-
-				}
-				case "Safari" ->
-				{
-
-				}
+				case "Google Chrome" -> settings.put("driver", "chrome");
+				case "Mozilla Firefox" -> settings.put("driver", "firefox");
+				case "Microsoft Edge" -> settings.put("driver", "edge");
+				case "Internet Explorer" -> settings.put("driver", "ie");
+				case "Safari" -> settings.put("driver", "safari");
 			}
 		});
 
@@ -155,7 +165,8 @@ public class SettingsController
 		mainPane.add(connectMessageLabel,3,2);
 		// Web driver config
 		mainPane.add(webdriverLabel, 0, 3);
-		mainPane.add(webdriverComboBox, 1, 3, 2, 1);
+		//mainPane.add(webdriverComboBox, 1, 3, 2, 1);
+		mainPane.add(driversHBox, 1, 3, 2, 1);
 		// Driver amount config
 		mainPane.add(driverAmountLabel, 0, 4);
 		mainPane.add(driverAmountSlider, 1, 4, 3, 1);
