@@ -112,7 +112,6 @@ public class DataHandler {
     }
 
     public static boolean toCSVFile(GROUPBY groupby, Sitemap sitemap, String filename) {
-        System.out.println("GROUPBY:"+groupby.name()+" Sitemap:"+sitemap.toString()+" Filename:"+ filename);
         String jsonstring = toJSON(groupby,sitemap);
         JFlat flatMe = new JFlat(jsonstring);
         try {

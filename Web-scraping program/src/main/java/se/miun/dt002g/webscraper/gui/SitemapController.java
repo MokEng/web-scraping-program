@@ -119,7 +119,10 @@ public class SitemapController extends GridPane
 				ScrapeSettings scrapeSettings = popup.getScrapeSettings();
 				scrapeSettings.localStorageLocation = defaultStorageLocation;
 				scrapeSettings.NO_DRIVERS = NR_OF_DRIVERS;
-				current.ifPresent(sitemap -> scheduleScraper(sitemap,scrapeSettings,mongoDbHandler,Duration.seconds(0),Duration.seconds(0),0));
+				scrapeSettings.repetitions = 0;
+				scrapeSettings.firstStart = Duration.seconds(0);
+				scrapeSettings.interval = Duration.seconds(0);
+				current.ifPresent(sitemap -> scheduleScraper(sitemap,scrapeSettings,mongoDbHandler));
 			}
 
 		});
@@ -235,20 +238,17 @@ public class SitemapController extends GridPane
 	 * @param sitemap, the sitemap to be scraped
 	 * @param settings, the settings for the scrape
 	 * @param mongoDbHandler, for writing to mongodb
-	 * @param interval, how long between repetitions
-	 * @param firstStart, how long before the first repetition is started
-	 * @param repetitions, how many times should this task run
 	 */
-	private void scheduleScraper(Sitemap sitemap,ScrapeSettings settings,MongoDbHandler mongoDbHandler,Duration interval,Duration firstStart,int repetitions){
+	private void scheduleScraper(Sitemap sitemap,ScrapeSettings settings,MongoDbHandler mongoDbHandler){
 		TimerService service = new TimerService(sitemap,settings,mongoDbHandler); // create new Timer-object
 		AtomicInteger count = new AtomicInteger(0);
 		service.setCount(count.get());
-		service.setDelay(Duration.seconds(firstStart.toSeconds())); // set start time of first scrape
-		service.setPeriod(Duration.seconds(interval.toSeconds())); // set the interval between scrapers
+		service.setDelay(Duration.seconds(settings.firstStart.toSeconds())); // set start time of first scrape
+		service.setPeriod(Duration.seconds(settings.interval.toSeconds())); // set the interval between scrapers
 		service.setOnSucceeded(t -> { // when a scrape has succeeded
 			System.out.println("Called : " + t.getSource().getValue()
 					+ " time(s)");
-			if(repetitions <= (Integer)t.getSource().getValue()){ // cancel new scrape if it has reached max repetitions
+			if(settings.repetitions <= (Integer)t.getSource().getValue()){ // cancel new scrape if it has reached max repetitions
 				t.getSource().cancel();
 			}
 			count.set((int) t.getSource().getValue());
