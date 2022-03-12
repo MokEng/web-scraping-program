@@ -58,6 +58,10 @@ public class TaskCreator extends GridPane
 		textButton.setMinWidth(50);
 		clickButton.setMinWidth(50);
 		navigateButton.setMinWidth(50);
+		textButton.setTooltip(new Tooltip("Task that is used to scrape text"));
+		clickButton.setTooltip(new Tooltip("Task that is to simulate a click on the webpage"));
+		navigateButton.setTooltip(new Tooltip("Task that is used to change to a new URL. " +
+				"Enter the URl in the URL/xPath field and then press the ADD button to go to a new URL"));
 
 		ToggleGroup typeGroup = new ToggleGroup();
 		textButton.setToggleGroup(typeGroup);
@@ -70,16 +74,22 @@ public class TaskCreator extends GridPane
 		Label urlPathLabel = new Label("URL/xPath ");
 		urlPathLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
 		TextField urlPathField = new TextField();
+		urlPathField.setTooltip(new Tooltip("The xPath of the element you want to scrape or click, or the URL you want to navigate to"));
 
 		Label idLabel = new Label("Task ID ");
 		idLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
 		TextField idField = new TextField();
+		idField.setTooltip(new Tooltip("The id of the task. Can be used to group the scraped data"));
 
 		Label nameLabel = new Label("Data Name ");
 		nameLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
 		TextField nameField = new TextField();
+		nameField.setTooltip(new Tooltip("The name/type of the task data. Can be used to group the scraped data"));
 
 		ToggleButton selectButton = new ToggleButton("Select Element");
+		selectButton.setTooltip(new Tooltip("Press the button to enable element selection mode. " +
+				"When active, clicking on an element on the webpage will select it and fill the xPath field with the path to the element. " +
+				"Normal click events do not occur when element selection mode is active."));
 		selectButton.selectedProperty().addListener((observable, oldValue, newValue) ->
 		{
 			if (!newValue && selectedNode != null)
@@ -90,11 +100,15 @@ public class TaskCreator extends GridPane
 
 		Button backArrowButton = new Button("<-");
 		backArrowButton.setMinWidth(50);
+		backArrowButton.setTooltip(new Tooltip("Navigates back in the webpage history. Acts the same as the back button in browsers"));
 		Button selectChildrenButton = new Button("Select Children");
+		selectChildrenButton.setTooltip(new Tooltip("Select all elements inside the currently selected element"));
 		selectChildrenButton.setMinWidth(50);
 		Button selectSiblingsButton = new Button("Select Siblings");
+		selectSiblingsButton.setTooltip(new Tooltip("Select all elements that are in the same parent element as the currently selected element"));
 		Button selectParentButton = new Button("Select Parent");
 		selectParentButton.setMinWidth(50);
+		selectParentButton.setTooltip(new Tooltip("Select the element containing the current selected element"));
 		HBox domManipButtonHBox = new HBox(5, backArrowButton, selectChildrenButton, selectSiblingsButton, selectParentButton);
 
 		Button addButton = new Button("Add Task"),
@@ -103,6 +117,9 @@ public class TaskCreator extends GridPane
 		addButton.setMinWidth(50);
 		removeButton.setMinWidth(50);
 		saveButton.setMinWidth(50);
+		addButton.setTooltip(new Tooltip("Adds a task with the currently selected options"));
+		removeButton.setTooltip(new Tooltip("Removes the lastest task from the list"));
+		saveButton.setTooltip(new Tooltip("Saves and combines all tasks in the list and adds it to the sitemap"));
 
 		HBox buttonHBox = new HBox(5, addButton, removeButton, saveButton);
 

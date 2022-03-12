@@ -3,7 +3,6 @@ package se.miun.dt002g.webscraper.gui;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import se.miun.dt002g.webscraper.database.DbStorageSettings;
@@ -20,9 +19,9 @@ public class RunScraperPopup {
     }
 
     private boolean runScraper=false;
-    private DbStorageSettings dbSettings = new DbStorageSettings();
+    private final DbStorageSettings dbSettings = new DbStorageSettings();
 
-    private ScrapeSettings scrapeSettings = new ScrapeSettings();
+    private final ScrapeSettings scrapeSettings = new ScrapeSettings();
 
     public RunScraperPopup(String sitemapName,MongoDbHandler mongoDbHandler, Map<String,String> settings)
     {
@@ -39,7 +38,11 @@ public class RunScraperPopup {
         chooseStorageLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
         dataFormatLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
         RadioButton localButton = new RadioButton("Local Storage");
+        Tooltip localButtonTooltip = new Tooltip("Save the scraped data locally on your computer");
+        localButton.setTooltip(localButtonTooltip);
         RadioButton databaseButton = new RadioButton("MongoDb");
+        Tooltip databaseButtonTooltip = new Tooltip("Save the scraped data on a MongoDB database");
+        databaseButton.setTooltip(databaseButtonTooltip);
         Label dbIsConnectedLabel= new Label("");
         if(!mongoDbHandler.isConnected()){
             databaseButton.setDisable(true);
@@ -54,23 +57,32 @@ public class RunScraperPopup {
         formatPicker.getItems().add(DATA_FORMAT.json.name());
         formatPicker.getItems().add(DATA_FORMAT.csv.name());
         formatPicker.getSelectionModel().select(0);
+        Tooltip formatPickerTooltip = new Tooltip("Select the format used to save the data");
+        formatPicker.setTooltip(formatPickerTooltip);
 
         Label groupByLabel = new Label("Select way to group the data: ");
         ChoiceBox<String> groupPicker = new ChoiceBox<>();
         groupPicker.getItems().add(GROUPBY.id.name());
         groupPicker.getItems().add(GROUPBY.dataName.name());
         groupPicker.getSelectionModel().select(0);
+        Tooltip groupPickerTooltip = new Tooltip("Select how to group the data");
+        groupPicker.setTooltip(groupPickerTooltip);
 
         Label databaseSettingsLabel = new Label("Database Settings");
         databaseSettingsLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
 
         Label databaseNameLabel = new Label("Database: ");
         TextField databaseNameTextField= new TextField(settings.get("latestDb"));
+        Tooltip databaseNameTextFieldTooltip = new Tooltip("The name of the database");
+        databaseNameTextField.setTooltip(databaseNameTextFieldTooltip);
 
         Label collectionNameLabel = new Label("Collection: ");
         TextField collectionNameTextField = new TextField(settings.get("latestColl"));
+        Tooltip collectionNameTextFieldTooltip = new Tooltip("The name of the collection to store the data in");
+        collectionNameTextField.setTooltip(collectionNameTextFieldTooltip);
         RadioButton dropPreviousData = new RadioButton("Drop previous data in collection");
-
+        Tooltip dropPreviousDataTooltip = new Tooltip("If the data currently in the collection should be deleted before the new data is inserted");
+        dropPreviousData.setTooltip(dropPreviousDataTooltip);
 
         Button runButton = new Button("Run");
         Button cancelButton = new Button("Cancel");
