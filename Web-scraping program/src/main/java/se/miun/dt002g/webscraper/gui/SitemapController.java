@@ -5,9 +5,6 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.concurrent.ScheduledService;
 import javafx.concurrent.Task;
-import javafx.concurrent.Worker;
-import javafx.concurrent.WorkerStateEvent;
-import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
@@ -15,10 +12,10 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import se.miun.dt002g.webscraper.database.DbStorageSettings;
 import se.miun.dt002g.webscraper.database.MongoDbHandler;
 import se.miun.dt002g.webscraper.scraper.*;
 
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -56,14 +53,13 @@ public class SitemapController extends GridPane
 	{
 		//NR_OF_DRIVERS = Runtime.getRuntime().availableProcessors();
 		settings = new HashMap<>();
+		setDriverSystemProperties();
 
 		defaultStorageLocation = System.getProperty("user.dir");
 		menuBar();
 		sitemapList = new ListView<>();
 		mainLabel = new Label("Sitemaps");
 		mainLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 20px");
-
-
 
 		addButton.setMinWidth(50);
 		editButton.setMinWidth(50);
@@ -163,6 +159,22 @@ public class SitemapController extends GridPane
 		sitemapList.setItems(FXCollections.observableArrayList(sitemaps.stream().map(Sitemap::getName).toList()));
 	}
 
+	/**
+	 * Sets the system properties needed to use the drivers in the scraper.
+	 * A driver can only be selected if it is present in the /drivers folder,
+	 * so even if we set the system property for a driver we don't have on the system, it shouldn't lead to any problems.
+	 */
+	private void setDriverSystemProperties()
+	{
+		File driverFolder = new File("drivers");
+		if (!driverFolder.exists()) driverFolder.mkdir();
+		String driverPath = driverFolder.getAbsolutePath() + File.separator;
+		System.setProperty("webdriver.chrome.driver", driverPath + "chromedriver.exe");
+		System.setProperty("webdriver.gecko.driver", driverPath + "geckodriver.exe");
+		System.setProperty("webdriver.edge.driver", driverPath + "msedgedriver.exe");
+		System.setProperty("webdriver.ie.driver", driverPath + "IEDriverServer.exe");
+	}
+
 	public boolean saveSitemaps(){
 		sitemaps.forEach(Sitemap::clearDataFromTasks);
 		return SitemapHandler.saveSitemaps(sitemapSourceDir,sitemaps);
@@ -256,8 +268,6 @@ public class SitemapController extends GridPane
 		});
 		service.start();
 	}
-
-
 
 	private static class TimerService extends ScheduledService<Integer> {
 		Sitemap sitemap;
