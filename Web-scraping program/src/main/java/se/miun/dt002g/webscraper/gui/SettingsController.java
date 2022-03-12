@@ -3,10 +3,10 @@ package se.miun.dt002g.webscraper.gui;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.DirectoryChooser;
@@ -19,8 +19,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 public class SettingsController
 {
@@ -122,7 +122,16 @@ public class SettingsController
 				}
 			}
 		});
-		HBox driversHBox = new HBox(5, webdriverComboBox, driversLink);
+		Button openDriverDirectoryButton = new Button("Place drivers here");
+		openDriverDirectoryButton.setOnAction(event ->
+		{
+			try
+			{
+				Desktop.getDesktop().open(new File("drivers"));
+			}
+			catch (IOException ignored) {}
+		});
+		HBox driversHBox = new HBox(5, webdriverComboBox, driversLink, openDriverDirectoryButton);
 
 		getExesFromDriverDir();
 		webdriverComboBox.setItems(exesInDir);
