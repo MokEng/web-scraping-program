@@ -57,7 +57,10 @@ public class SettingsController
 		Label storageLocationLabel = new Label("Local Storage Location ");
 		storageLocationLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
 		TextField storageLocationField = new TextField(defaultStorageLocation);
-		storageLocationField.setDisable(true);
+		storageLocationField.setEditable(false);
+		Tooltip storageLocationFieldTooltip = new Tooltip("The location on you computer where the scraped data will be saved. " +
+				"Press the Open button to select a new location");
+		storageLocationField.setTooltip(storageLocationFieldTooltip);
 		storageLocationField.setMinWidth(400);
 		Button selectDirectoryButton = new Button("Open");
 		Tooltip selectDirectoryButtonTooltip = new Tooltip("Click to select a new storage location");
