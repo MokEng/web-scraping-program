@@ -60,6 +60,8 @@ public class SettingsController
 		storageLocationField.setDisable(true);
 		storageLocationField.setMinWidth(400);
 		Button selectDirectoryButton = new Button("Open");
+		Tooltip selectDirectoryButtonTooltip = new Tooltip("Click to select a new storage location");
+		selectDirectoryButton.setTooltip(selectDirectoryButtonTooltip);
 		selectDirectoryButton.setOnAction(event ->
 		{
 			DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -79,7 +81,11 @@ public class SettingsController
 		databaseLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
 		TextField connectionStringField = new TextField("");
 		connectionStringField.setMinWidth(60);
+		Tooltip connectionStringFieldTooltip = new Tooltip("Enter the connection string used to connect to your MongoDB database");
+		connectionStringField.setTooltip(connectionStringFieldTooltip);
 		Button tryConnectButton = new Button("Connect");
+		Tooltip tryConnectButtonTooltip = new Tooltip("Press to try to connect to MongoDB using the connection string");
+		tryConnectButton.setTooltip(tryConnectButtonTooltip);
 		Label connectMessageLabel = new Label("");
 
 		if(mongoDbHandler.isConnected()){
@@ -107,7 +113,12 @@ public class SettingsController
 		Label webdriverLabel = new Label("Web Driver ");
 		webdriverLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
 		ComboBox<String> webdriverComboBox = new ComboBox<>();
+		Tooltip webDriverComboBoxTooltip = new Tooltip("Select the driver that will be used to scrape the data. " +
+				"You must have the browser that corresponds to the selected driver installed on your computer for the scraping to work");
+		webdriverComboBox.setTooltip(webDriverComboBoxTooltip);
 		Hyperlink driversLink = new Hyperlink("Get more drivers");
+		Tooltip driversLinkTooltip = new Tooltip("Opens the Selenium webpage from where you can download more drivers");
+		driversLink.setTooltip(driversLinkTooltip);
 		driversLink.setOnAction(event ->
 		{
 			if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
@@ -123,6 +134,8 @@ public class SettingsController
 			}
 		});
 		Button openDriverDirectoryButton = new Button("Place drivers here");
+		Tooltip openDriverDirectoryButtonTooltip = new Tooltip("Opens the /drivers directory. Place the downloaded drivers in here.");
+		openDriverDirectoryButton.setTooltip(openDriverDirectoryButtonTooltip);
 		openDriverDirectoryButton.setOnAction(event ->
 		{
 			try
@@ -162,6 +175,11 @@ public class SettingsController
 		driverAmountSlider.setSnapToTicks(true);
 		driverAmountSlider.valueProperty().addListener((observable, oldValue, newValue) ->
 				settings.put("threadAmount", Integer.toString((int) driverAmountSlider.getValue())));
+		Tooltip driverAmountSliderTooltip = new Tooltip("Select how many drivers will scrape data at the same time. " +
+				"Higher values should speed up scraping time. " +
+				"Higher values also lead to higher memory and CPU usage, and, depending on the structure and amount of tasks, " +
+				"a higher amount of drivers could slow down scraping time.");
+		driverAmountSlider.setTooltip(driverAmountSliderTooltip);
 
 		// Local storage config
 		mainPane.add(settingsHeaderLabel, 0, 0, 3, 1);
