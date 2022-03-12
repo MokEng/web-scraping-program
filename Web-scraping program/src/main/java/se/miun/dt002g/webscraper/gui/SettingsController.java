@@ -25,10 +25,10 @@ import java.util.List;
 public class SettingsController
 {
 	private final Map<String, String> webdriverNames = new HashMap<>() {{
-		put("chromedriver.exe", "Google Chrome");
-		put("msedgedriver.exe", "Microsoft Edge");
-		put("IEDriverServer.exe", "Internet Explorer");
-		put("geckodriver.exe", "Mozilla Firefox");
+		put("chromedriver", "Google Chrome");
+		put("msedgedriver", "Microsoft Edge");
+		put("IEDriverServer", "Internet Explorer");
+		put("geckodriver", "Mozilla Firefox");
 		put("safari", "Safari");
 	}};
 
@@ -142,6 +142,7 @@ public class SettingsController
 
 		// ------------------------- Driver amount -------------------------------------------
 		int threadAmount = settings.containsKey("threadAmount") ? Integer.parseInt(settings.get("threadAmount")) : 1;
+		if (threadAmount == 1) settings.put("threadAmount", "1");
 		Label driverAmountLabel = new Label("No. of Drivers");
 		driverAmountLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
 		Slider driverAmountSlider = new Slider(1, Runtime.getRuntime().availableProcessors(), threadAmount);
@@ -181,12 +182,12 @@ public class SettingsController
 	private void getExesFromDriverDir()
 	{
 		new File("drivers").mkdir();
-		File driverFolder = new File("drivers/");
-		File[] files = driverFolder.listFiles((dir, name) -> name.endsWith(".exe"));
+		File driverFolder = new File("drivers" + File.separator);
+		File[] files = driverFolder.listFiles();
 
 		List<String> fileNames;
 		if (files == null || files.length == 0) fileNames = new ArrayList<>();
-		else fileNames = Arrays.stream(files).map(File::getName).filter(webdriverNames::containsKey).map(webdriverNames::get).toList();
+		else fileNames = Arrays.stream(files).map(File::getName).map(s -> s.replace(".exe", "")).filter(webdriverNames::containsKey).map(webdriverNames::get).toList();
 
 		exesInDir = FXCollections.observableArrayList(fileNames);
 		exesInDir.add("Safari");

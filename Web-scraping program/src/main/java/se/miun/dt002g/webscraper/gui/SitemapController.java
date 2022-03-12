@@ -172,10 +172,11 @@ public class SitemapController extends GridPane
 		File driverFolder = new File("drivers");
 		if (!driverFolder.exists()) driverFolder.mkdir();
 		String driverPath = driverFolder.getAbsolutePath() + File.separator;
-		System.setProperty("webdriver.chrome.driver", driverPath + "chromedriver.exe");
-		System.setProperty("webdriver.gecko.driver", driverPath + "geckodriver.exe");
-		System.setProperty("webdriver.edge.driver", driverPath + "msedgedriver.exe");
-		System.setProperty("webdriver.ie.driver", driverPath + "IEDriverServer.exe");
+		String fileExtension = (System.getProperty("os.name").toLowerCase().contains("windows")) ? ".exe" : "";
+		System.setProperty("webdriver.chrome.driver", driverPath + "chromedriver" + fileExtension);
+		System.setProperty("webdriver.gecko.driver", driverPath + "geckodriver" + fileExtension);
+		System.setProperty("webdriver.edge.driver", driverPath + "msedgedriver" + fileExtension);
+		System.setProperty("webdriver.ie.driver", driverPath + "IEDriverServer" + fileExtension);
 	}
 
 	public boolean saveSitemaps(){
