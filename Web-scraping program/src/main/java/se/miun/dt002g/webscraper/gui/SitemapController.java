@@ -27,10 +27,10 @@ public class SitemapController extends GridPane
 	List<TimerService> scheduledScrapes=new ArrayList<>();
 	List<Sitemap> sitemaps;
 	String sitemapSourceDir;
-	String currentSelectedSitemap;
+	//String currentSelectedSitemap;
 	TextArea dataPreview;
-	ListView<String> sitemapList;
-	ListView<String> taskList;
+	ListView<Sitemap> sitemapList;
+	ListView<se.miun.dt002g.webscraper.scraper.Task> taskList;
 	Label selectedSitemapLabel;
 	Label dataStorageLabel;
 	TextField chosenLocation;
@@ -80,7 +80,7 @@ public class SitemapController extends GridPane
 			{
 				Sitemap newSitemap = new Sitemap(baseURL,sitemapName);
 				sitemaps.add(newSitemap);
-				sitemapList.setItems(FXCollections.observableArrayList(sitemaps.stream().map(Sitemap::getName).toList()));
+				sitemapList.setItems(FXCollections.observableArrayList(sitemaps));
 				Stage addStage = new Stage();
 				addStage.setResizable(false);
 				addStage.initModality(Modality.APPLICATION_MODAL);
@@ -97,7 +97,7 @@ public class SitemapController extends GridPane
 			addStage.setResizable(false);
 			addStage.initModality(Modality.APPLICATION_MODAL);
 			addStage.setTitle("Create New Sitemap");
-			Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s.getName(), currentSelectedSitemap)).findAny();
+			Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s, sitemapList.getSelectionModel().getSelectedItem())).findAny();
 			if(current.isPresent()){
 				addStage.setScene(new Scene(new TaskController(current.get().getRootUrl(),current.get())));
 				addStage.sizeToScene();
@@ -111,12 +111,12 @@ public class SitemapController extends GridPane
 		runButton.setMinWidth(65);
 		scheduleButton.setMinWidth(65);
 		scheduleButton.setOnAction(event ->{
-			if(currentSelectedSitemap == null){
+			if(sitemapList.getSelectionModel().getSelectedItem() == null){
 				return;
 			}
-			ScheduleScraperPopup popup = new ScheduleScraperPopup(currentSelectedSitemap,mongoDbHandler,settings);
+			ScheduleScraperPopup popup = new ScheduleScraperPopup(sitemapList.getSelectionModel().getSelectedItem().getName(),mongoDbHandler,settings);
 			if(popup.isRunScraper()){
-				Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s.getName(), currentSelectedSitemap)).findAny();
+				Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s, sitemapList.getSelectionModel().getSelectedItem())).findAny();
 				ScrapeSettings scrapeSettings = popup.getScrapeSettings();
 				scrapeSettings.localStorageLocation = defaultStorageLocation;
 				scrapeSettings.NO_DRIVERS = NR_OF_DRIVERS;
@@ -127,12 +127,12 @@ public class SitemapController extends GridPane
 		});
 
 		runButton.setOnAction(event -> {
-			if(currentSelectedSitemap == null){
+			if(sitemapList.getSelectionModel().getSelectedItem() == null){
 				return;
 			}
-			RunScraperPopup popup = new RunScraperPopup(currentSelectedSitemap,mongoDbHandler,settings);
+			RunScraperPopup popup = new RunScraperPopup(sitemapList.getSelectionModel().getSelectedItem().getName(),mongoDbHandler,settings);
 			if(popup.isRunScraper()){
-				Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s.getName(), currentSelectedSitemap)).findAny();
+				Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s, sitemapList.getSelectionModel().getSelectedItem())).findAny();
 				ScrapeSettings scrapeSettings = popup.getScrapeSettings();
 				scrapeSettings.localStorageLocation = defaultStorageLocation;
 				scrapeSettings.NO_DRIVERS = NR_OF_DRIVERS;
@@ -168,16 +168,16 @@ public class SitemapController extends GridPane
 		sitemapList.getSelectionModel().selectedItemProperty().addListener(l-> updateFields());
 
 		deleteButton.setOnAction(event -> {
-			SitemapHandler.removeSitemapFile(sitemapSourceDir,currentSelectedSitemap);
-			sitemaps.removeIf(s-> Objects.equals(s.getName(),currentSelectedSitemap));
-			sitemapList.setItems(FXCollections.observableArrayList(sitemaps.stream().map(Sitemap::getName).toList()));
+			SitemapHandler.removeSitemapFile(sitemapSourceDir,sitemapList.getSelectionModel().getSelectedItem().getName());
+			sitemaps.removeIf(s-> Objects.equals(s, sitemapList.getSelectionModel().getSelectedItem()));
+			sitemapList.setItems(FXCollections.observableArrayList(sitemaps));
 			dataPreview.setText("");
 			taskList.setItems(FXCollections.observableArrayList(new ArrayList<>()));
 		});
 
 		sitemapSourceDir=System.getProperty("user.dir")+"/src/main/resources/";
 		sitemaps = SitemapHandler.loadSitemaps(sitemapSourceDir,new ArrayList<>());
-		sitemapList.setItems(FXCollections.observableArrayList(sitemaps.stream().map(Sitemap::getName).toList()));
+		sitemapList.setItems(FXCollections.observableArrayList(sitemaps));
 	}
 
 	/**
@@ -206,12 +206,11 @@ public class SitemapController extends GridPane
 	private void updateFields(){
 		dataPreview.setText("");
 		taskList.getItems().clear();
-		currentSelectedSitemap = sitemapList.getSelectionModel().getSelectedItem();
 		editButton.setDisable(false);
 		runButton.setDisable(false);
-		Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s.getName(), currentSelectedSitemap)).findAny();
+		Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s, sitemapList.getSelectionModel().getSelectedItem())).findAny();
 		current.ifPresent(sitemap -> {
-			taskList.setItems(FXCollections.observableArrayList(sitemap.getTasks().stream().map(Object::toString).toList()));
+			taskList.setItems(FXCollections.observableArrayList(sitemap.getTasks().stream().toList()));
 			Optional<String> jsonString = DataHandler.toJSONList(GROUPBY.id, sitemap).stream().reduce((s, s2) -> s + ",\n" + s2);
 			jsonString.ifPresent(s -> dataPreview.setText(s));
 			editButton.setDisable(sitemap.isRunning());
@@ -222,7 +221,7 @@ public class SitemapController extends GridPane
 	}
 
 	private void updateSitemapListView(){
-		sitemapList.setItems(FXCollections.observableArrayList(sitemaps.stream().map(Sitemap::getName).toList()));
+		sitemapList.setItems(FXCollections.observableArrayList(sitemaps));
 	}
 
 	private void menuBar(){

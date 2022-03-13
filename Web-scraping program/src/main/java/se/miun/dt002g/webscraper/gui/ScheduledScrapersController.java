@@ -2,6 +2,7 @@ package se.miun.dt002g.webscraper.gui;
 
 import javafx.collections.FXCollections;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.GridPane;
@@ -25,12 +26,19 @@ public class ScheduledScrapersController {
         Label scheduledLabel = new Label("Scheduled Scrapes");
         scheduledLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
 
-        ListView<String> scheduledScrapesList= new ListView<>();
-        scheduledScrapesList.setItems(FXCollections.observableArrayList(scheduledList.stream().map(SitemapController.TimerService::toString).toList()));
+        ListView<SitemapController.TimerService> scheduledScrapesList= new ListView<>();
+        scheduledScrapesList.setItems(FXCollections.observableArrayList(scheduledList));
+
+        Button deleteButton = new Button("Delete");
+        deleteButton.setOnAction(event -> {
+            scheduledScrapesList.getSelectionModel().getSelectedItem().cancel();
+            scheduledList.remove(scheduledScrapesList.getSelectionModel().getSelectedItem());
+            scheduledScrapesList.setItems(FXCollections.observableArrayList(scheduledList));
+        });
 
         mainPane.add(scheduledLabel,0,0);
         mainPane.add(scheduledScrapesList,0,1,4,4);
-
+        mainPane.add(deleteButton,4,0);
 
         scheduleStage.setScene(new Scene(mainPane));
         scheduleStage.sizeToScene();

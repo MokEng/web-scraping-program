@@ -26,6 +26,9 @@ public class Sitemap implements Serializable {
         this.rootUrl = rootUrl;
         this.name = name;
     }
+    public String toString(){
+        return name;
+    }
 
     public boolean isRunning(){
         return running;
