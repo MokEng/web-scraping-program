@@ -10,10 +10,7 @@ import se.miun.dt002g.webscraper.database.MongoDbHandler;
 import se.miun.dt002g.webscraper.scraper.DATA_FORMAT;
 import se.miun.dt002g.webscraper.scraper.GROUPBY;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
 import java.util.Map;
@@ -78,9 +75,12 @@ public class ScheduleScraperPopup {
 
         Label schedulingLabel = new Label("Scheduling Options");
         schedulingLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
-        DateTimePicker datePicker = new DateTimePicker();
-        datePicker.setDateTimeValue(LocalDateTime.now());
-        Label timeErrorLabel = new Label("");
+        DatePicker datePicker = new DatePicker();
+        ChoiceBox<LocalTime> hours = new ChoiceBox<>();
+
+        for(int x = 0; x < 24;x++){
+            hours.getItems().add(LocalTime.of(x,0));
+        }
 
         Button runButton = new Button("Schedule");
         Button cancelButton = new Button("Cancel");
@@ -109,14 +109,14 @@ public class ScheduleScraperPopup {
 
         mainPane.add(schedulingLabel,0,8);
         mainPane.add(datePicker,1,8,2,1);
-        mainPane.add(timeErrorLabel,3,8);
+        mainPane.add(hours,3,8);
 
 
         mainPane.add(runButton,0,10);
         mainPane.add(cancelButton,1,10);
 
         runButton.setOnAction(event1 -> {
-            scrapeSettings.startAt = datePicker.getDateTimeValue();
+            scrapeSettings.startAt = LocalDateTime.of(datePicker.getValue(),hours.getValue());
 
             scrapeSettings.saveLocal = localButton.isSelected();
             scrapeSettings.saveDb = databaseButton.isSelected();
