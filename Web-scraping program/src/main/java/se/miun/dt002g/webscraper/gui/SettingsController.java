@@ -39,7 +39,7 @@ public class SettingsController
 	public SettingsController(Map<String, String> settingsMap, MongoDbHandler mongoDbHandler)
 	{
 		settings = settingsMap;
-		defaultStorageLocation = System.getProperty("user.dir");
+		defaultStorageLocation = settings.containsKey("storageLocation") ? settings.get("storageLocation") : System.getProperty("user.dir");
 
 		Stage settingsStage = new Stage();
 		settingsStage.initModality(Modality.APPLICATION_MODAL);
@@ -74,7 +74,7 @@ public class SettingsController
 			{
 				defaultStorageLocation = directoryChooser.showDialog(new Stage()).getAbsolutePath();
 				storageLocationField.setText(defaultStorageLocation);
-				settings.put("defaultStorageLocation", defaultStorageLocation);
+				settings.put("storageLocation", defaultStorageLocation);
 			}
 			catch (Exception ignored) {}
 		});
