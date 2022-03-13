@@ -14,8 +14,11 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import se.miun.dt002g.webscraper.database.MongoDbHandler;
 
+import javax.annotation.Nonnull;
 import java.awt.*;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -233,5 +236,45 @@ public class SettingsController
 		{
 			System.out.println("Conncection");
 		}
+	}
+
+	public static void saveSettings(@Nonnull Map<String, String> settings) throws IOException
+	{
+		File file = new File("settings.cfg");
+		if (file.createNewFile()) System.out.println("Created new settings file");
+		FileWriter fileWriter = new FileWriter(file);
+
+		for (Map.Entry<String, String> e : settings.entrySet())
+		{
+			fileWriter.write(e.getKey() + ": " + e.getValue() + "\n");
+		}
+
+		fileWriter.close();
+	}
+
+	public static boolean loadSettings(@Nonnull Map<String, String> settings)
+	{
+		File file = new File("settings.cfg");
+		if (!file.exists()) return false;
+
+		System.out.println("Loaded settings file");
+
+		try
+		{
+			Scanner scanner = new Scanner(file);
+
+			while (scanner.hasNext())
+			{
+				String line = scanner.nextLine();
+				String key = line.substring(0, line.indexOf(":"));
+				String value = line.substring(line.indexOf(": ")+2);
+				settings.put(key, value);
+			}
+
+			scanner.close();
+		}
+		catch (FileNotFoundException ignored) {}
+
+		return true;
 	}
 }

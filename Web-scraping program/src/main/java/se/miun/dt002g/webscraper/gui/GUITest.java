@@ -24,6 +24,7 @@ public class GUITest extends Application
 	public void stop() throws Exception {
 		super.stop();
 		sitemapController.saveSitemaps();
+		sitemapController.saveSettings();
 	}
 	public static void main(String[] args)
 	{

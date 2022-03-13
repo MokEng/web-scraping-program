@@ -19,6 +19,7 @@ import se.miun.dt002g.webscraper.database.MongoDbHandler;
 import se.miun.dt002g.webscraper.scraper.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -58,6 +59,7 @@ public class SitemapController extends GridPane
 		//NR_OF_DRIVERS = Runtime.getRuntime().availableProcessors();
 		System.out.println(System.getProperty("os.name"));
 		settings = new HashMap<>();
+		if (!SettingsController.loadSettings(settings)) System.out.println("No settings.cfg was found.");
 		setDriverSystemProperties();
 
 		defaultStorageLocation = System.getProperty("user.dir");
@@ -224,6 +226,15 @@ public class SitemapController extends GridPane
 		sitemaps.forEach(Sitemap::clearDataFromTasks);
 		sitemaps.forEach(s-> s.setRunning(false));
 		return SitemapHandler.saveSitemaps(sitemapSourceDir,sitemaps);
+	}
+
+	public void saveSettings()
+	{
+		try
+		{
+			SettingsController.saveSettings(settings);
+		}
+		catch (IOException ignored) {}
 	}
 
 	private void updateFields(){
