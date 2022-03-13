@@ -55,7 +55,11 @@ public class Sitemap implements Serializable {
         driver.navigate().to(rootUrl);
         running = true;
         tasks.forEach(p-> { // run all tasks in list
-            p.run(driver);
+            try {
+                p.run(driver);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         });
         driver.close();
         running =false;
@@ -82,7 +86,7 @@ public class Sitemap implements Serializable {
             WebDriver driver = new ChromeDriver();
             driver.manage().window().minimize();
             driver.navigate().to(rootUrl);
-            Callable<Void> callable = new TaskThread(partitionOfTasks,driver); // new callable for executing tasks
+            Callable<Void> callable = new TaskExecutor(partitionOfTasks,driver); // new callable for executing tasks
             Future<Void> future = pool.submit(callable); // submit callable to pool for execution
             set.add(future);
         }
