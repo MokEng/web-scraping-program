@@ -1,13 +1,12 @@
 package se.miun.dt002g.webscraper.scraper;
 
+import javafx.application.Platform;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.*;
 
 public class Sitemap implements Serializable {
@@ -65,7 +64,7 @@ public class Sitemap implements Serializable {
         running =false;
     }
 
-    public void runMultiThreadedScraper(int nrOfDrivers) throws ExecutionException, InterruptedException {
+    public void runMultiThreadedScraper(int nrOfDrivers, Runnable runOnTaskFinish) throws ExecutionException, InterruptedException {
         if(tasks.isEmpty()){
             return;
         }
@@ -76,7 +75,7 @@ public class Sitemap implements Serializable {
         ExecutorService pool = Executors.newFixedThreadPool(nrOfDrivers); // create thread-pool
         int tasksPerDriver = tasks.size() / nrOfDrivers;
         int leftOverTasks = tasks.size() % nrOfDrivers;
-        Set<Future<Void>> set = new HashSet<>();
+        CompletionService<Void> completionService = new ExecutorCompletionService<>(pool);
         int temp = 0;
         for(int i=0; i < nrOfDrivers;i++){
             // A part of all tasks to be run by a driver
@@ -87,11 +86,15 @@ public class Sitemap implements Serializable {
             driver.manage().window().minimize();
             driver.navigate().to(rootUrl);
             Callable<Void> callable = new TaskExecutor(partitionOfTasks,driver); // new callable for executing tasks
-            Future<Void> future = pool.submit(callable); // submit callable to pool for execution
-            set.add(future);
+            completionService.submit(callable);
         }
-        for (Future<Void> future : set) {
-            future.get(); // wait for all threads to finish
+
+        int driversLeft = nrOfDrivers;
+        while (driversLeft > 0)
+        {
+            completionService.take();
+            if (runOnTaskFinish != null) Platform.runLater(runOnTaskFinish);
+            driversLeft--;
         }
         pool.shutdown(); // destroy thread-pool
         running = false;

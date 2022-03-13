@@ -1,5 +1,6 @@
 package se.miun.dt002g.webscraper.gui;
 
+import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
@@ -8,7 +9,9 @@ import javafx.concurrent.Task;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -48,7 +51,7 @@ public class SitemapController extends GridPane
 			scheduleButton = new Button("Schedule");
 	int NR_OF_DRIVERS=1;
 	MongoDbHandler mongoDbHandler = new MongoDbHandler();
-
+	Stage progressStage = null;
 
 	public SitemapController()
 	{
@@ -122,7 +125,7 @@ public class SitemapController extends GridPane
 				scrapeSettings.NO_DRIVERS = NR_OF_DRIVERS;
 				scrapeSettings.repetitions = 0;
 				scrapeSettings.interval = java.time.Duration.ofSeconds(0);
-				current.ifPresent(sitemap -> scheduleScraper(sitemap,scrapeSettings,mongoDbHandler));
+				current.ifPresent(sitemap -> scheduleScraper(sitemap,scrapeSettings,mongoDbHandler, null));
 			}
 		});
 
@@ -140,7 +143,27 @@ public class SitemapController extends GridPane
 				scrapeSettings.firstStart = java.time.Duration.ofSeconds(0);
 				scrapeSettings.interval = java.time.Duration.ofSeconds(0);
 				scrapeSettings.startAt = LocalDateTime.now();
-				current.ifPresent(sitemap -> scheduleScraper(sitemap,scrapeSettings,mongoDbHandler));
+
+				progressStage = new Stage();
+				ProgressBar progressBar = new ProgressBar(0.0);
+				int nTasks = current.map(value -> value.getTasks().size()).orElse(-1);
+				Text progressText = new Text("Tasks done 0/"+nTasks);
+				progressText.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
+				HBox progessHBox = new HBox(5, progressText, progressBar);
+				progessHBox.setStyle("-fx-border-insets: 5px; -fx-padding: 5px;");
+				progressStage.setScene(new Scene(progessHBox));
+				AtomicInteger finishedTasks = new AtomicInteger(0);
+				progressStage.sizeToScene();
+				progressStage.setResizable(false);
+				progressStage.initModality(Modality.APPLICATION_MODAL);
+				progressStage.setTitle("Executing Tasks...");
+
+				current.ifPresent(sitemap -> scheduleScraper(sitemap,scrapeSettings,mongoDbHandler, () ->
+				{
+					progressBar.setProgress((double)finishedTasks.incrementAndGet()/(double)nTasks);
+					progressText.setText("Tasks done "+finishedTasks.get() + "/" + nTasks);
+				}));
+				progressStage.show();
 			}
 
 		});
@@ -264,13 +287,13 @@ public class SitemapController extends GridPane
 	 * @param settings, the settings for the scrape
 	 * @param mongoDbHandler, for writing to mongodb
 	 */
-	private void scheduleScraper(Sitemap sitemap,ScrapeSettings settings,MongoDbHandler mongoDbHandler){
+	private void scheduleScraper(Sitemap sitemap,ScrapeSettings settings,MongoDbHandler mongoDbHandler, Runnable update){
 
 		java.time.Duration startIn = java.time.Duration.between(LocalDateTime.now(),settings.startAt);
 		if(settings.startAt.isBefore(LocalDateTime.now())){
 			startIn = java.time.Duration.ofSeconds(0);
 		}
-		TimerService service = new TimerService(sitemap,settings,mongoDbHandler); // create new Timer-object
+		TimerService service = new TimerService(sitemap,settings,mongoDbHandler, update); // create new Timer-object
 		AtomicInteger count = new AtomicInteger(0);
 		service.setCount(count.get());
 		service.setDelay(Duration.seconds(startIn.toSeconds())); // set start time of first scrape
@@ -287,6 +310,24 @@ public class SitemapController extends GridPane
 			updateFields();
 			for(int x = 0 ; x < scheduledScrapes.size();x++){
 				scheduledScrapes.removeIf(timerService -> timerService.equals(service));
+			}
+
+			if (progressStage != null)
+			{
+				Timer closeTimer = new Timer();
+				closeTimer.schedule(new TimerTask()
+				{
+					@Override
+					public void run()
+					{
+						Platform.runLater(() ->
+						{
+							progressStage.close();
+							progressStage = null;
+							closeTimer.cancel();
+						});
+					}
+				}, 1000);
 			}
 		});
 		service.setOnScheduled(t->{ // when a scrape is scheduled
@@ -310,10 +351,12 @@ public class SitemapController extends GridPane
 		Sitemap sitemap;
 		ScrapeSettings settings;
 		MongoDbHandler mongoDbHandler;
-		TimerService(Sitemap sitemap,ScrapeSettings settings,MongoDbHandler mongoDbHandler){
+		Runnable update;
+		TimerService(Sitemap sitemap,ScrapeSettings settings,MongoDbHandler mongoDbHandler, Runnable update){
 			this.sitemap = sitemap;
 			this.settings = settings;
 			this.mongoDbHandler = mongoDbHandler;
+			this.update = update;
 		}
 		private IntegerProperty count = new SimpleIntegerProperty();
 
@@ -331,7 +374,7 @@ public class SitemapController extends GridPane
 				protected Integer call() {
 					sitemap.clearDataFromTasks();
 					try {
-						sitemap.runMultiThreadedScraper(settings.NO_DRIVERS);
+						sitemap.runMultiThreadedScraper(settings.NO_DRIVERS, update);
 					} catch (ExecutionException | InterruptedException e) {
 						e.printStackTrace();
 					}
