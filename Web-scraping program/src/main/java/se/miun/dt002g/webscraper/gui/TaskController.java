@@ -24,7 +24,7 @@ public class TaskController extends GridPane
 	{
 		baseURL = url;
 		this.sitemap = sitemap;
-		Label taskLabel = new Label("Tasks");
+		Label taskLabel = new Label("Sitemap Branches");
 		taskLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 20px");
 
 		Label baseURLLabel = new Label("Base URL ");
@@ -84,7 +84,7 @@ public class TaskController extends GridPane
 				Stage addStage = new Stage();
 				addStage.setResizable(false);
 				addStage.initModality(Modality.APPLICATION_MODAL);
-				addStage.setTitle("Create New Task");
+				addStage.setTitle("Edit Task");
 				TaskCreator taskCreator = new TaskCreator(baseURL, editTask.get());
 				addStage.setScene(new Scene(taskCreator));
 				addStage.sizeToScene();

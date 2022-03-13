@@ -96,7 +96,7 @@ public class SitemapController extends GridPane
 			Stage addStage = new Stage();
 			addStage.setResizable(false);
 			addStage.initModality(Modality.APPLICATION_MODAL);
-			addStage.setTitle("Create New Sitemap");
+			addStage.setTitle("Edit Sitemap");
 			Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s, sitemapList.getSelectionModel().getSelectedItem())).findAny();
 			if(current.isPresent()){
 				addStage.setScene(new Scene(new TaskController(current.get().getRootUrl(),current.get())));
@@ -147,7 +147,7 @@ public class SitemapController extends GridPane
 		runButtonVbox = new VBox(5, runButton, scheduleButton);
 
 		taskList = new ListView<>();
-		selectedSitemapLabel = new Label("Selected Sitemap");
+		selectedSitemapLabel = new Label("Sitemap Branches");
 
 		dataPreview = new TextArea();
 		dataPreview.setPromptText("No data scraped for this task.");
