@@ -4,10 +4,11 @@ import se.miun.dt002g.webscraper.database.DbStorageSettings;
 import se.miun.dt002g.webscraper.scraper.DATA_FORMAT;
 import se.miun.dt002g.webscraper.scraper.GROUPBY;
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-public class ScrapeSettings {
+public class ScrapeSettings implements Serializable {
     boolean saveLocal;
     boolean saveDb;
     DATA_FORMAT dataFormat;

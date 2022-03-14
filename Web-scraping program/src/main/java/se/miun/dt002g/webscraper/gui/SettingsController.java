@@ -108,11 +108,11 @@ public class SettingsController
 			if(mongoDbHandler.tryConnect(text)){
 				connectMessageLabel.setText("Connected to database");
 				connectMessageLabel.setStyle("-fx-background-color: lightgreen;");
+				settings.put("dbConnection",text);
 			}else{
 				connectMessageLabel.setText("Connection failed");
 				connectMessageLabel.setStyle("-fx-background-color: red;");
 			}
-			settings.put("dbConnection",text);
 		});
 
 

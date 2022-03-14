@@ -25,6 +25,7 @@ public class GUITest extends Application
 		super.stop();
 		sitemapController.saveSitemaps();
 		sitemapController.saveSettings();
+		sitemapController.saveScheduledScrapes();
 	}
 	public static void main(String[] args)
 	{

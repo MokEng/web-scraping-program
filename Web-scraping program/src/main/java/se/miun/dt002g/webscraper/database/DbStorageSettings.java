@@ -1,6 +1,8 @@
 package se.miun.dt002g.webscraper.database;
 
-public class DbStorageSettings {
+import java.io.Serializable;
+
+public class DbStorageSettings implements Serializable {
     public String databaseName;
     public String collectionName;
     public boolean dropPreviousData;

@@ -18,15 +18,20 @@ import javafx.util.Duration;
 import se.miun.dt002g.webscraper.database.MongoDbHandler;
 import se.miun.dt002g.webscraper.scraper.*;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 public class SitemapController extends GridPane
 {
+	List<Pair<Sitemap,ScrapeSettings>> serializableTimerServices= new ArrayList<>();
 	Map<String, String> settings;
 	List<TimerService> scheduledScrapes=new ArrayList<>();
 	List<Sitemap> sitemaps;
@@ -61,6 +66,7 @@ public class SitemapController extends GridPane
 		if (!SettingsController.loadSettings(settings)) System.out.println("No settings.cfg was found.");
 		setDriverSystemProperties();
 		connectToDb();
+		loadScheduledScrapes();
 		defaultStorageLocation = System.getProperty("user.dir");
 		menuBar();
 		sitemapList = new ListView<>();
@@ -262,7 +268,41 @@ public class SitemapController extends GridPane
 		if(s!=null){
 			mongoDbHandler.tryConnect(s);
 		}
+	}
+	public void saveScheduledScrapes() {
 
+		ObjectOutputStream oos;
+		try {
+			oos= new ObjectOutputStream(new FileOutputStream(System.getProperty("user.dir")+"/scheduledSitemaps.ssm"));
+			serializableTimerServices.forEach(scheduled -> {
+				try {
+					oos.writeObject(scheduled);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			});
+			oos.flush();
+			oos.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+	public void loadScheduledScrapes(){
+		ObjectInputStream ois;
+		try {
+			File file = new File("scheduledSitemaps.ssm");
+			if (!file.exists()){
+				System.out.println("File didnt exist");
+				return;
+			}
+			ois = new ObjectInputStream(new FileInputStream(file));
+			while(true){
+				Pair<Sitemap,ScrapeSettings> pair = (Pair<Sitemap,ScrapeSettings>) ois.readObject();
+				scheduleScraper(pair.first,pair.second,mongoDbHandler,()->{});
+			}
+		} catch (IOException | ClassNotFoundException ignored) {
+		}
 	}
 
 	private void menuBar(){
@@ -281,7 +321,7 @@ public class SitemapController extends GridPane
 		MenuItem sitemapFromFile=new MenuItem("Load Sitemap");
 		MenuItem scheduledScraper = new MenuItem("Scheduled Scrapes");
 		scheduledScraper.setOnAction(event -> {
-			ScheduledScrapersController s = new ScheduledScrapersController(scheduledScrapes);
+			ScheduledScrapersController s = new ScheduledScrapersController(scheduledScrapes,serializableTimerServices);
 
 		});
 		MenuItem quitWebScraperApp=new MenuItem("Quit App");
@@ -322,14 +362,18 @@ public class SitemapController extends GridPane
 					+ " time(s)");
 			if(settings.repetitions <= (Integer)t.getSource().getValue()){ // cancel new scrape if it has reached max repetitions
 				t.getSource().cancel();
+				scheduledScrapes.removeIf(timerService -> timerService.equals(service));
+				serializableTimerServices.removeIf(
+						p -> p.first.equals(sitemap)
+								|| p.second.equals(settings));
 			}
 			count.set((int) t.getSource().getValue());
 			sitemap.setName(sitemap.getName().substring(0,sitemap.getName().indexOf("[")-1));
 			updateSitemapListView();
 			updateFields();
-			for(int x = 0 ; x < scheduledScrapes.size();x++){
+			/*for(int x = 0 ; x < scheduledScrapes.size();x++){
 				scheduledScrapes.removeIf(timerService -> timerService.equals(service));
-			}
+			}*/
 
 			if (progressStage != null)
 			{
@@ -364,9 +408,10 @@ public class SitemapController extends GridPane
 			return;
 		}
 		scheduledScrapes.add(service);
+		serializableTimerServices.add(Pair.of(sitemap,settings));
 	}
 
-	public static class TimerService extends ScheduledService<Integer> {
+	public static class TimerService extends ScheduledService<Integer>  {
 		Sitemap sitemap;
 		ScrapeSettings settings;
 		MongoDbHandler mongoDbHandler;
