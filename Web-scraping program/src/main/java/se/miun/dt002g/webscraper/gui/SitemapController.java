@@ -56,12 +56,11 @@ public class SitemapController extends GridPane
 
 	public SitemapController()
 	{
-		//NR_OF_DRIVERS = Runtime.getRuntime().availableProcessors();
-		System.out.println(System.getProperty("os.name"));
+
 		settings = new HashMap<>();
 		if (!SettingsController.loadSettings(settings)) System.out.println("No settings.cfg was found.");
 		setDriverSystemProperties();
-
+		connectToDb();
 		defaultStorageLocation = System.getProperty("user.dir");
 		menuBar();
 		sitemapList = new ListView<>();
@@ -258,6 +257,14 @@ public class SitemapController extends GridPane
 		sitemapList.setItems(FXCollections.observableArrayList(sitemaps));
 	}
 
+	private void connectToDb(){
+		String s = settings.get("dbConnection");
+		if(s!=null){
+			mongoDbHandler.tryConnect(s);
+		}
+
+	}
+
 	private void menuBar(){
 		//creating menu bar
 		MenuBar menuBar=new MenuBar();
@@ -291,6 +298,7 @@ public class SitemapController extends GridPane
 		VBox vBox=new VBox(menuBar);
 		add(vBox,0,0,4,2);
 	}
+
 
 	/**
 	 * Schedules a sitemap to be scraped.

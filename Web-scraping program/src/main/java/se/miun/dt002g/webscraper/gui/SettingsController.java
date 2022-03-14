@@ -112,6 +112,7 @@ public class SettingsController
 				connectMessageLabel.setText("Connection failed");
 				connectMessageLabel.setStyle("-fx-background-color: red;");
 			}
+			settings.put("dbConnection",text);
 		});
 
 
