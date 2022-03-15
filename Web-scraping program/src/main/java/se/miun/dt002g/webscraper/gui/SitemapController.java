@@ -9,9 +9,7 @@ import javafx.concurrent.Task;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -19,15 +17,11 @@ import se.miun.dt002g.webscraper.database.MongoDbHandler;
 import se.miun.dt002g.webscraper.scraper.*;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class SitemapController extends GridPane
 {
@@ -35,17 +29,12 @@ public class SitemapController extends GridPane
 	List<TimerService> scheduledScrapes=new ArrayList<>();
 	List<Sitemap> sitemaps;
 	String sitemapSourceDir;
-	//String currentSelectedSitemap;
 	TextArea dataPreview;
 	ListView<Sitemap> sitemapList;
 	ListView<se.miun.dt002g.webscraper.scraper.Task> taskList;
 	Label selectedSitemapLabel;
-	Label dataStorageLabel;
-	TextField chosenLocation;
 	VBox buttonVBox;
 	VBox runButtonVbox;
-	VBox dataStorageButtonVbox;
-	VBox dataStorageConfigVbox;
 	Label mainLabel;
 	String defaultStorageLocation;
 	Button addButton = new Button("New"),
@@ -54,15 +43,15 @@ public class SitemapController extends GridPane
 			saveButton = new Button("Save");
 	Button runButton = new Button("Run"),
 			scheduleButton = new Button("Schedule");
-	int NR_OF_DRIVERS=1;
+	int NR_OF_DRIVERS;
 	MongoDbHandler mongoDbHandler = new MongoDbHandler();
-	Stage progressStage = null;
+	ProgressStage progressStage = null;
 
 	public SitemapController()
 	{
-
 		settings = new HashMap<>();
 		if (!SettingsController.loadSettings(settings)) System.out.println("No settings.cfg was found.");
+		NR_OF_DRIVERS = Integer.parseInt(settings.getOrDefault("threadAmount", "1"));
 		setDriverSystemProperties();
 		connectToDb();
 		loadScheduledScrapes();
@@ -150,10 +139,12 @@ public class SitemapController extends GridPane
 				scrapeSettings.interval = java.time.Duration.ofSeconds(0);
 				scrapeSettings.startAt = LocalDateTime.now();
 
-				ProgressStage progressStage = new ProgressStage(current.get(),NR_OF_DRIVERS);
-
-				current.ifPresent(sitemap -> scheduleScraper(sitemap,scrapeSettings,mongoDbHandler, progressStage.getRunnable()));
-				progressStage.show();
+				current.ifPresent(sitemap ->
+				{
+					progressStage = new ProgressStage(current.get(), Math.min(current.get().getTasks().size(), NR_OF_DRIVERS));
+					scheduleScraper(sitemap,scrapeSettings,mongoDbHandler, progressStage.getRunnable());
+					progressStage.show();
+				});
 			}
 		});
 		runButtonVbox = new VBox(5, runButton, scheduleButton);
@@ -356,7 +347,15 @@ public class SitemapController extends GridPane
 
 			if (progressStage != null)
 			{
+				List<java.time.Duration> times = sitemap.getTimes().stream().map(AtomicReference::get).toList();
+				java.time.Duration totalTime = java.time.Duration.ZERO;
+				for (java.time.Duration d : times)
+				{
+					totalTime = totalTime.plus(d);
+				}
+
 				Timer closeTimer = new Timer();
+				java.time.Duration finalTotalTime = totalTime;
 				closeTimer.schedule(new TimerTask()
 				{
 					@Override
@@ -367,6 +366,8 @@ public class SitemapController extends GridPane
 							progressStage.close();
 							progressStage = null;
 							closeTimer.cancel();
+
+							StatsPopup stats = new StatsPopup(sitemap.getTotalBytes(), finalTotalTime, sitemap.getTasks().stream().map(Object::toString).toList(), sitemap.getBytesPerTask(), times);
 						});
 					}
 				}, 1000);

@@ -5,15 +5,19 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Sitemap implements Serializable {
     private List<Task> tasks = new ArrayList<>();
     private final String rootUrl; // all drivers run from Sitemap starts scraping from rootUrl;
     private String name;
-
+    private final List<List<AtomicReference<Duration>>> times;
+    private int totalBytes = 0;
+    private final List<Integer> bytesPerTask;
 
     public void setRunning(boolean running) {
         this.running = running;
@@ -24,6 +28,8 @@ public class Sitemap implements Serializable {
     public Sitemap(String rootUrl,String name){
         this.rootUrl = rootUrl;
         this.name = name;
+        this.times = new ArrayList<>();
+        this.bytesPerTask = new ArrayList<>();
     }
     public String toString(){
         return name;
@@ -85,7 +91,9 @@ public class Sitemap implements Serializable {
             WebDriver driver = new ChromeDriver();
             driver.manage().window().minimize();
             driver.navigate().to(rootUrl);
-            Callable<Void> callable = new TaskExecutor(partitionOfTasks,driver); // new callable for executing tasks
+            List<AtomicReference<Duration>> time = new ArrayList<>();
+            Callable<Void> callable = new TaskExecutor(partitionOfTasks,driver, time); // new callable for executing tasks
+            times.add(time);
             completionService.submit(callable);
         }
 
@@ -98,6 +106,16 @@ public class Sitemap implements Serializable {
         }
         pool.shutdown(); // destroy thread-pool
         running = false;
+
+        for (Task t : tasks)
+        {
+            if (t instanceof TextTask)
+            {
+                int b = ((TextTask) t).data.getBytes().length;
+                totalBytes += b;
+                bytesPerTask.add(b);
+            }
+        }
     }
 
     public void clearDataFromTasks(){
@@ -120,4 +138,25 @@ public class Sitemap implements Serializable {
         this.tasks = tasks;
     }
 
+    public List<AtomicReference<Duration>> getTimes()
+    {
+        List<AtomicReference<Duration>> temp = new ArrayList<>();
+
+        for (List<AtomicReference<Duration>> l : times)
+        {
+            temp.addAll(l);
+        }
+
+        return temp;
+    }
+
+    public int getTotalBytes()
+    {
+        return totalBytes;
+    }
+
+    public List<Integer> getBytesPerTask()
+    {
+        return bytesPerTask;
+    }
 }
