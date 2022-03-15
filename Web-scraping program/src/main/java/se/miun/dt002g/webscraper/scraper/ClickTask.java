@@ -7,6 +7,8 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.time.Duration;
+
 /**
  * Task for clicking an element in a web-page.
  */
@@ -31,7 +33,7 @@ public class ClickTask extends Task
 	{
 		// Use javascript to click an element on the current webpage
 		JavascriptExecutor js = (JavascriptExecutor) driver;
-		WebElement element = new WebDriverWait(driver, 5)
+		WebElement element = new WebDriverWait(driver, Duration.ofSeconds(5))
 				.until(ExpectedConditions.presenceOfElementLocated(By.xpath(xPathToElement)));
 		js.executeScript("arguments[0].click();", element);
 	}
