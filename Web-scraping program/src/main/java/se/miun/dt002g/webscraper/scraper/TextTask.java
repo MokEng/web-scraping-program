@@ -5,6 +5,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.time.Duration;
+
 /**
  * Task for extracting data in form of text from the web.
  */
@@ -32,7 +34,7 @@ public class TextTask extends Task
 	void execute(WebDriver driver) throws Exception
 	{
 		// get inner html of the element
-		data = new WebDriverWait(driver, 5)
+		data = new WebDriverWait(driver, Duration.ofSeconds(5))
 				.until(ExpectedConditions.presenceOfElementLocated(By.xpath(xPathToElement))).getText();
 
 	}

@@ -341,7 +341,6 @@ public class SitemapController extends GridPane
 				scheduledScrapes.removeIf(timerService -> timerService.equals(service));
 			}
 			count.set((int) t.getSource().getValue());
-			sitemap.setName(sitemap.getName().substring(0,sitemap.getName().indexOf("[")-1));
 			updateSitemapListView();
 			updateFields();
 
@@ -378,13 +377,20 @@ public class SitemapController extends GridPane
 				t.getSource().cancel();
 			}
 		});
-		service.setOnRunning(t->{ // when a scrape is running
-			sitemap.setName(sitemap.getName()+" [Running]");
-			updateSitemapListView();
-			updateFields();
-		});
+
 		service.setOnFailed(t->{
 			System.out.println("Something went wrong while scraping...");
+			sitemap.getTasks().forEach(ta->{
+
+				se.miun.dt002g.webscraper.scraper.Task temp = ta;
+				while (temp != null) {
+					if(temp.exception != null){
+						temp.exception.printStackTrace();
+					}
+					temp = temp.getDoFirst();
+				}
+
+			});
 		});
 		service.setRestartOnFailure(false);
 
@@ -426,9 +432,9 @@ public class SitemapController extends GridPane
 					sitemap.runMultiThreadedScraper(settings.NO_DRIVERS, update);
 					if (settings.saveLocal) {
 						if (settings.dataFormat == DATA_FORMAT.json) {
-							DataHandler.toJSONFile(settings.groupby, sitemap, settings.localStorageLocation + "/" + sitemap.getName().substring(0, sitemap.getName().indexOf("[") - 1) + ".json");
+							DataHandler.toJSONFile(settings.groupby, sitemap, settings.localStorageLocation + "/" + sitemap.getName() + ".json");
 						} else if (settings.dataFormat == DATA_FORMAT.csv) {
-							DataHandler.toCSVFile(settings.groupby, sitemap, settings.localStorageLocation + "/" + sitemap.getName().substring(0, sitemap.getName().indexOf("[") - 1) + ".csv");
+							DataHandler.toCSVFile(settings.groupby, sitemap, settings.localStorageLocation + "/" + sitemap.getName() + ".csv");
 						}
 					}
 					if (settings.saveDb) {
