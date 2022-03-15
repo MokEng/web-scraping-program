@@ -383,6 +383,11 @@ public class SitemapController extends GridPane
 			updateSitemapListView();
 			updateFields();
 		});
+		service.setOnFailed(t->{
+			System.out.println("Something went wrong while scraping...");
+		});
+		service.setRestartOnFailure(false);
+
 		service.start();
 		if(startIn==java.time.Duration.ofSeconds(0)){
 			return;
@@ -414,13 +419,11 @@ public class SitemapController extends GridPane
 		}
 		protected Task<Integer> createTask() {
 			return new Task<>() {
-				protected Integer call() {
+				protected Integer call() throws ExecutionException, InterruptedException {
 					sitemap.clearDataFromTasks();
-					try {
-						sitemap.runMultiThreadedScraper(settings.NO_DRIVERS, update);
-					} catch (ExecutionException | InterruptedException e) {
-						e.printStackTrace();
-					}
+					// Bättre att kasta exceptionet uppåt här så kan man hantera problemet i runScraper-funktionen?
+					// Alternativt att returnera efter att ett exception har fångats i en try/catch
+					sitemap.runMultiThreadedScraper(settings.NO_DRIVERS, update);
 					if (settings.saveLocal) {
 						if (settings.dataFormat == DATA_FORMAT.json) {
 							DataHandler.toJSONFile(settings.groupby, sitemap, settings.localStorageLocation + "/" + sitemap.getName().substring(0, sitemap.getName().indexOf("[") - 1) + ".json");
