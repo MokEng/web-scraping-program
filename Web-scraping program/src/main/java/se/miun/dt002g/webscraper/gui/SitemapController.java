@@ -31,7 +31,6 @@ import java.util.stream.Stream;
 
 public class SitemapController extends GridPane
 {
-	List<Pair<Sitemap,ScrapeSettings>> serializableTimerServices= new ArrayList<>();
 	Map<String, String> settings;
 	List<TimerService> scheduledScrapes=new ArrayList<>();
 	List<Sitemap> sitemaps;
@@ -270,13 +269,12 @@ public class SitemapController extends GridPane
 		}
 	}
 	public void saveScheduledScrapes() {
-
 		ObjectOutputStream oos;
 		try {
 			oos= new ObjectOutputStream(new FileOutputStream(System.getProperty("user.dir")+"/scheduledSitemaps.ssm"));
-			serializableTimerServices.forEach(scheduled -> {
+			scheduledScrapes.forEach(scheduled -> {
 				try {
-					oos.writeObject(scheduled);
+					oos.writeObject(Pair.of(scheduled.sitemap,scheduled.settings));
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -321,7 +319,7 @@ public class SitemapController extends GridPane
 		MenuItem sitemapFromFile=new MenuItem("Load Sitemap");
 		MenuItem scheduledScraper = new MenuItem("Scheduled Scrapes");
 		scheduledScraper.setOnAction(event -> {
-			ScheduledScrapersController s = new ScheduledScrapersController(scheduledScrapes,serializableTimerServices);
+			ScheduledScrapersController s = new ScheduledScrapersController(scheduledScrapes);
 
 		});
 		MenuItem quitWebScraperApp=new MenuItem("Quit App");
@@ -363,9 +361,6 @@ public class SitemapController extends GridPane
 			if(settings.repetitions <= (Integer)t.getSource().getValue()){ // cancel new scrape if it has reached max repetitions
 				t.getSource().cancel();
 				scheduledScrapes.removeIf(timerService -> timerService.equals(service));
-				serializableTimerServices.removeIf(
-						p -> p.first.equals(sitemap)
-								|| p.second.equals(settings));
 			}
 			count.set((int) t.getSource().getValue());
 			sitemap.setName(sitemap.getName().substring(0,sitemap.getName().indexOf("[")-1));
@@ -408,7 +403,6 @@ public class SitemapController extends GridPane
 			return;
 		}
 		scheduledScrapes.add(service);
-		serializableTimerServices.add(Pair.of(sitemap,settings));
 	}
 
 	public static class TimerService extends ScheduledService<Integer>  {

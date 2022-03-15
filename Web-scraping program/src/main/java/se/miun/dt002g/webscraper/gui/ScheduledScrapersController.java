@@ -14,7 +14,7 @@ import se.miun.dt002g.webscraper.scraper.Sitemap;
 import java.util.List;
 
 public class ScheduledScrapersController {
-    ScheduledScrapersController(List<SitemapController.TimerService> scheduledList, List<Pair<Sitemap,ScrapeSettings>> serializedScrapes){
+    ScheduledScrapersController(List<SitemapController.TimerService> scheduledList){
         Stage scheduleStage = new Stage();
         scheduleStage.initModality(Modality.APPLICATION_MODAL);
         scheduleStage.setTitle("Scheduled Scrapes");
@@ -34,9 +34,6 @@ public class ScheduledScrapersController {
         deleteButton.setOnAction(event -> {
             scheduledScrapesList.getSelectionModel().getSelectedItem().cancel();
             scheduledList.remove(scheduledScrapesList.getSelectionModel().getSelectedItem());
-            serializedScrapes.removeIf(
-                    p -> p.first.equals(scheduledScrapesList.getSelectionModel().getSelectedItem().sitemap)
-                            || p.second.equals(scheduledScrapesList.getSelectionModel().getSelectedItem().settings));
             scheduledScrapesList.setItems(FXCollections.observableArrayList(scheduledList));
         });
 

@@ -75,13 +75,12 @@ public class ScheduleScraperPopup {
 
         Label schedulingLabel = new Label("Scheduling Options");
         schedulingLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
-        DatePicker datePicker = new DatePicker();
+        DatePicker datePicker = new DatePicker(LocalDate.now());
         ChoiceBox<LocalTime> hours = new ChoiceBox<>();
-
         for(int x = 0; x < 24;x++){
             hours.getItems().add(LocalTime.of(x,0));
         }
-
+        hours.getSelectionModel().select(15);
         Button runButton = new Button("Schedule");
         Button cancelButton = new Button("Cancel");
         mainPane.add(localButton,0,0);
@@ -117,7 +116,6 @@ public class ScheduleScraperPopup {
 
         runButton.setOnAction(event1 -> {
             scrapeSettings.startAt = LocalDateTime.of(datePicker.getValue(),hours.getValue());
-
             scrapeSettings.saveLocal = localButton.isSelected();
             scrapeSettings.saveDb = databaseButton.isSelected();
             if(Objects.equals(formatPicker.getSelectionModel().getSelectedItem(), DATA_FORMAT.json.name())){
