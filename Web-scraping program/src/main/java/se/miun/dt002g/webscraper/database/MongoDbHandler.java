@@ -37,19 +37,16 @@ public class MongoDbHandler {
                         @Override
                         public void serverHearbeatStarted(ServerHeartbeatStartedEvent event) {
                             isConnected = true;
-                            System.out.println("isConnected = true @1");
                         }
 
                         @Override
                         public void serverHeartbeatSucceeded(ServerHeartbeatSucceededEvent event) {
                             isConnected = true;
-                            System.out.println("isConnected = true @2");
                         }
 
                         @Override
                         public void serverHeartbeatFailed(ServerHeartbeatFailedEvent event) {
                             isConnected = false;
-                            System.out.println("isConnected = false @3");
                         }
                     })).build());
             // Temporary until I figure out how to check if credentials are OK.

@@ -316,20 +316,22 @@ public class SitemapController extends GridPane
 			settings = settingsController.getSettings();
 			NR_OF_DRIVERS = Integer.parseInt(String.valueOf(settings.get("threadAmount")));
 		});
-		MenuItem sitemapFromFile=new MenuItem("Load Sitemap");
 		MenuItem scheduledScraper = new MenuItem("Scheduled Scrapes");
 		scheduledScraper.setOnAction(event -> {
 			ScheduledScrapersController s = new ScheduledScrapersController(scheduledScrapes);
 
 		});
-		MenuItem quitWebScraperApp=new MenuItem("Quit App");
-		quitWebScraperApp.setStyle("-fx-font-weight: bold; -fx-font-size: 12px");
+		MenuItem quitApp=new MenuItem("Quit App");
+		quitApp.setStyle("-fx-font-weight: bold; -fx-font-size: 12px");
+		quitApp.setOnAction(event -> { // close application
+			Stage stage = (Stage) getScene().getWindow();
+			stage.close();
+		});
 		//adding menu items to the menu
 		menu.getItems().add(settingsButton);
-		menu.getItems().add(sitemapFromFile);
 		menu.getItems().add(scheduledScraper);
 		menu.getItems().add(new SeparatorMenuItem());
-		menu.getItems().add(quitWebScraperApp);
+		menu.getItems().add(quitApp);
 		//adding menu to the menu bar
 		menuBar.getMenus().add(menu);
 		//creating VBox for adding all menu bar
@@ -366,9 +368,6 @@ public class SitemapController extends GridPane
 			sitemap.setName(sitemap.getName().substring(0,sitemap.getName().indexOf("[")-1));
 			updateSitemapListView();
 			updateFields();
-			/*for(int x = 0 ; x < scheduledScrapes.size();x++){
-				scheduledScrapes.removeIf(timerService -> timerService.equals(service));
-			}*/
 
 			if (progressStage != null)
 			{
