@@ -150,28 +150,11 @@ public class SitemapController extends GridPane
 				scrapeSettings.interval = java.time.Duration.ofSeconds(0);
 				scrapeSettings.startAt = LocalDateTime.now();
 
-				progressStage = new Stage();
-				ProgressBar progressBar = new ProgressBar(0.0);
-				int nTasks = current.map(value -> value.getTasks().size()).orElse(-1);
-				Text progressText = new Text("Tasks done 0/"+nTasks);
-				progressText.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
-				HBox progessHBox = new HBox(5, progressText, progressBar);
-				progessHBox.setStyle("-fx-border-insets: 5px; -fx-padding: 5px;");
-				progressStage.setScene(new Scene(progessHBox));
-				AtomicInteger finishedTasks = new AtomicInteger(0);
-				progressStage.sizeToScene();
-				progressStage.setResizable(false);
-				progressStage.initModality(Modality.APPLICATION_MODAL);
-				progressStage.setTitle("Executing Tasks...");
+				ProgressStage progressStage = new ProgressStage(current.get(),NR_OF_DRIVERS);
 
-				current.ifPresent(sitemap -> scheduleScraper(sitemap,scrapeSettings,mongoDbHandler, () ->
-				{
-					progressBar.setProgress((double)finishedTasks.incrementAndGet()/(double)nTasks);
-					progressText.setText("Tasks done "+finishedTasks.get() + "/" + nTasks);
-				}));
+				current.ifPresent(sitemap -> scheduleScraper(sitemap,scrapeSettings,mongoDbHandler, progressStage.getRunnable()));
 				progressStage.show();
 			}
-
 		});
 		runButtonVbox = new VBox(5, runButton, scheduleButton);
 
@@ -297,6 +280,8 @@ public class SitemapController extends GridPane
 			ois = new ObjectInputStream(new FileInputStream(file));
 			while(true){
 				Pair<Sitemap,ScrapeSettings> pair = (Pair<Sitemap,ScrapeSettings>) ois.readObject();
+				pair.second.NO_DRIVERS = NR_OF_DRIVERS;
+				pair.second.localStorageLocation = defaultStorageLocation;
 				scheduleScraper(pair.first,pair.second,mongoDbHandler,()->{});
 			}
 		} catch (IOException | ClassNotFoundException ignored) {
