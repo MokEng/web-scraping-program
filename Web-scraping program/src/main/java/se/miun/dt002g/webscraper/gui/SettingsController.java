@@ -224,7 +224,7 @@ public class SettingsController
 		else fileNames = Arrays.stream(files).map(File::getName).map(s -> s.replace(".exe", "")).filter(webdriverNames::containsKey).map(webdriverNames::get).toList();
 
 		exesInDir = FXCollections.observableArrayList(fileNames);
-		exesInDir.add("Safari");
+		if (System.getProperty("os.name").toLowerCase().contains("mac")) exesInDir.add("Safari");
 	}
 
 	private void connectToDatabase(String connectionString, MongoDbHandler mongoDbHandler)
