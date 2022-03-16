@@ -107,23 +107,38 @@ public class Sitemap implements Serializable {
         pool.shutdown(); // destroy thread-pool
         running = false;
 
-        for (Task t : tasks)
-        {
-            if (t instanceof TextTask)
-            {
-                int b = ((TextTask) t).data.getBytes().length;
-                totalBytes += b;
-                bytesPerTask.add(b);
+
+        tasks.forEach(p-> {
+            Task t = p;
+            int bytesPerChain = 0;
+            while (t != null) {
+                if(t instanceof TextTask){
+                    if(((TextTask)t).data == null){
+                        bytesPerChain = -1;
+                        break;
+                    }
+                    int b = ((TextTask) t).data.getBytes().length;
+                    bytesPerChain+=b;
+                    totalBytes+=b;
+                }
+                t = t.getDoFirst();
             }
-        }
+            bytesPerTask.add(bytesPerChain);
+        });
     }
 
-    public void clearDataFromTasks(){
+    public void clearData(){
+        totalBytes = 0;
+        bytesPerTask.clear();
+        times.clear();
         tasks.forEach(p-> {
             Task temp = p;
             while (temp != null) {
                 if(temp instanceof TextTask){
                     ((TextTask) temp).data=null;
+                }
+                if(temp.exception !=null){
+                    temp.exception = null;
                 }
                 temp = temp.getDoFirst();
             }

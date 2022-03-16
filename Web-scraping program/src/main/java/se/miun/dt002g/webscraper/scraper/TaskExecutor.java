@@ -20,12 +20,14 @@ class TaskExecutor implements Callable<Void> {
 
     @Override
     public Void call() {
+        String root = driver.getCurrentUrl();
         for(Task task: tasks){
+            Instant before = Instant.now();
             try{
-                Instant before = Instant.now();
                 task.run(driver);
-                times.add(new AtomicReference<>(Duration.between(before, Instant.now())));
             }catch(Exception ignored){}
+            times.add(new AtomicReference<>(Duration.between(before, Instant.now())));
+            driver.navigate().to(root);
         }
         driver.close();
         return null;

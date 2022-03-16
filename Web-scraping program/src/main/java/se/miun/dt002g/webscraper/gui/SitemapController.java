@@ -120,7 +120,10 @@ public class SitemapController extends GridPane
 				scrapeSettings.NO_DRIVERS = NR_OF_DRIVERS;
 				scrapeSettings.repetitions = 0;
 				scrapeSettings.interval = java.time.Duration.ofSeconds(0);
-				current.ifPresent(sitemap -> scheduleScraper(sitemap,scrapeSettings,mongoDbHandler, null));
+				current.ifPresent(sitemap -> {
+					progressStage = new ProgressStage(current.get(), Math.min(current.get().getTasks().size(), NR_OF_DRIVERS));
+					scheduleScraper(sitemap,scrapeSettings,mongoDbHandler, progressStage.getRunnable());
+				});
 			}
 		});
 
@@ -201,7 +204,7 @@ public class SitemapController extends GridPane
 	}
 
 	public boolean saveSitemaps(){
-		sitemaps.forEach(Sitemap::clearDataFromTasks);
+		sitemaps.forEach(Sitemap::clearData);
 		sitemaps.forEach(s-> s.setRunning(false));
 		return SitemapHandler.saveSitemaps(sitemapSourceDir,sitemaps);
 	}
@@ -328,6 +331,9 @@ public class SitemapController extends GridPane
 		if(settings.startAt.isBefore(LocalDateTime.now())){
 			startIn = java.time.Duration.ofSeconds(0);
 		}
+		//TESTING
+		startIn = java.time.Duration.ofSeconds(30);
+		//-----
 		TimerService service = new TimerService(sitemap,settings,mongoDbHandler, update); // create new Timer-object
 		AtomicInteger count = new AtomicInteger(0);
 		service.setCount(count.get());
@@ -377,20 +383,17 @@ public class SitemapController extends GridPane
 				t.getSource().cancel();
 			}
 		});
+		service.setOnRunning(t-> progressStage.show());
 
 		service.setOnFailed(t->{
-			System.out.println("Something went wrong while scraping...");
-			sitemap.getTasks().forEach(ta->{
-
-				se.miun.dt002g.webscraper.scraper.Task temp = ta;
-				while (temp != null) {
-					if(temp.exception != null){
-						temp.exception.printStackTrace();
-					}
-					temp = temp.getDoFirst();
-				}
-
-			});
+			scheduledScrapes.removeIf(timerService -> timerService.equals(service));
+			if (progressStage != null){
+				progressStage.close();
+				Alert alert = new Alert(Alert.AlertType.INFORMATION);
+				alert.setTitle("Error");
+				alert.setHeaderText("Something went wrong while scraping.");
+				alert.showAndWait();
+			}
 		});
 		service.setRestartOnFailure(false);
 
@@ -426,9 +429,8 @@ public class SitemapController extends GridPane
 		protected Task<Integer> createTask() {
 			return new Task<>() {
 				protected Integer call() throws ExecutionException, InterruptedException {
-					sitemap.clearDataFromTasks();
-					// Bättre att kasta exceptionet uppåt här så kan man hantera problemet i runScraper-funktionen?
-					// Alternativt att returnera efter att ett exception har fångats i en try/catch
+					sitemap.clearData();
+
 					sitemap.runMultiThreadedScraper(settings.NO_DRIVERS, update);
 					if (settings.saveLocal) {
 						if (settings.dataFormat == DATA_FORMAT.json) {
