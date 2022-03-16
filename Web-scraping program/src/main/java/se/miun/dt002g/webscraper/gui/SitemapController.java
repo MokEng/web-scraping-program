@@ -55,7 +55,7 @@ public class SitemapController extends GridPane
 		setDriverSystemProperties();
 		connectToDb();
 		loadScheduledScrapes();
-		defaultStorageLocation = System.getProperty("user.dir");
+		defaultStorageLocation = settings.getOrDefault("storageLocation",System.getProperty("user.dir"));
 		menuBar();
 		sitemapList = new ListView<>();
 		mainLabel = new Label("Sitemaps");
@@ -331,9 +331,7 @@ public class SitemapController extends GridPane
 		if(settings.startAt.isBefore(LocalDateTime.now())){
 			startIn = java.time.Duration.ofSeconds(0);
 		}
-		//TESTING
-		startIn = java.time.Duration.ofSeconds(30);
-		//-----
+		settings.webDriverName = this.settings.get("driver");
 		TimerService service = new TimerService(sitemap,settings,mongoDbHandler, update); // create new Timer-object
 		AtomicInteger count = new AtomicInteger(0);
 		service.setCount(count.get());
@@ -431,7 +429,7 @@ public class SitemapController extends GridPane
 				protected Integer call() throws ExecutionException, InterruptedException {
 					sitemap.clearData();
 
-					sitemap.runMultiThreadedScraper(settings.NO_DRIVERS, update);
+					sitemap.runMultiThreadedScraper(settings.NO_DRIVERS, update, settings.webDriverName);
 					if (settings.saveLocal) {
 						if (settings.dataFormat == DATA_FORMAT.json) {
 							DataHandler.toJSONFile(settings.groupby, sitemap, settings.localStorageLocation + "/" + sitemap.getName() + ".json");

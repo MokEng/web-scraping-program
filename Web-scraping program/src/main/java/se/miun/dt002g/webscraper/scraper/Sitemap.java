@@ -3,6 +3,10 @@ package se.miun.dt002g.webscraper.scraper;
 import javafx.application.Platform;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.ie.InternetExplorerDriver;
+import org.openqa.selenium.safari.SafariDriver;
 
 import java.io.Serializable;
 import java.time.Duration;
@@ -70,7 +74,7 @@ public class Sitemap implements Serializable {
         running =false;
     }
 
-    public void runMultiThreadedScraper(int nrOfDrivers, Runnable runOnTaskFinish) throws ExecutionException, InterruptedException {
+    public void runMultiThreadedScraper(int nrOfDrivers, Runnable runOnTaskFinish,String webDriverName) throws ExecutionException, InterruptedException {
         if(tasks.isEmpty()){
             return;
         }
@@ -88,7 +92,7 @@ public class Sitemap implements Serializable {
             List<Task> partitionOfTasks = new ArrayList<>(tasks.subList(i * tasksPerDriver + temp, (i + 1) * tasksPerDriver + leftOverTasks));
             temp = leftOverTasks;
             // driver to run partitionOfTasks
-            WebDriver driver = new ChromeDriver();
+            WebDriver driver = getWebdriverOfChoice(webDriverName);
             driver.manage().window().minimize();
             driver.navigate().to(rootUrl);
             List<AtomicReference<Duration>> time = new ArrayList<>();
@@ -173,5 +177,23 @@ public class Sitemap implements Serializable {
     public List<Integer> getBytesPerTask()
     {
         return bytesPerTask;
+    }
+
+    private WebDriver getWebdriverOfChoice(String webDriverName){
+
+        WebDriver driver;
+        if(webDriverName == null){
+            driver = new ChromeDriver();
+            return driver;
+        }
+        switch(webDriverName){
+            case "chrome": driver = new ChromeDriver(); break;
+            case "firefox":driver = new FirefoxDriver();break;
+            case "edge": driver = new EdgeDriver();break;
+            case "ie":driver = new InternetExplorerDriver();break;
+            case "safari":driver = new SafariDriver();break;
+            default: driver = new ChromeDriver();
+        }
+        return driver;
     }
 }

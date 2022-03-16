@@ -19,7 +19,7 @@ public class ScrapeSettings implements Serializable {
     java.time.Duration interval,firstStart;
     int repetitions;
     LocalDateTime startAt;
-
+    String webDriverName;
     public ScrapeSettings(){};
 
 }
