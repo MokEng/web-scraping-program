@@ -369,6 +369,7 @@ public class SitemapController extends GridPane
 		service.setDelay(Duration.seconds(startIn.toSeconds())); // set start time of first scrape
 		service.setPeriod(Duration.seconds(settings.interval.toSeconds())); // set the interval between scrapers
 		service.setOnSucceeded(t -> { // when a scrape has succeeded
+			sitemap.setRunning(false);
 			if(settings.repetitions <= (Integer)t.getSource().getValue()){ // cancel new scrape if it has reached max repetitions
 				t.getSource().cancel();
 				scheduledScrapes.removeIf(timerService -> timerService.equals(service)); // remove if previously scheduled
@@ -405,15 +406,21 @@ public class SitemapController extends GridPane
 				}, 1000);
 			}
 		});
-		service.setOnScheduled(t->{ // when a scrape is scheduled
-			if(sitemap.isRunning()){ // if a sitemap is already running, cancel this scheduled task
-				t.getSource().cancel();
+
+		service.setOnRunning(t-> {
+			for(Sitemap sm :sitemaps){
+				if(sm.isRunning()){
+					t.getSource().cancel();
+					return;
+				}
 			}
-		});
-		service.setOnRunning(t-> progressStage.show()); // show progressbar when the scraping begins
+			sitemap.setRunning(true);
+			progressStage.show();
+		}); // show progressbar when the scraping begins
 
 		service.setOnFailed(t->{ // show alert-box if something went wrong during execution
 			scheduledScrapes.removeIf(timerService -> timerService.equals(service));
+			sitemap.setRunning(false);
 			if (progressStage != null){
 				progressStage.close();
 				Alert alert = new Alert(Alert.AlertType.INFORMATION);

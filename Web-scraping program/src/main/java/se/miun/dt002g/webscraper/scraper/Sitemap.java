@@ -78,7 +78,6 @@ public class Sitemap implements Serializable {
         if(tasks.isEmpty()){
             return;
         }
-        running = true;
         if(nrOfDrivers > tasks.size()){
             nrOfDrivers = tasks.size();
         }
@@ -109,7 +108,6 @@ public class Sitemap implements Serializable {
             driversLeft--;
         }
         pool.shutdown(); // destroy thread-pool
-        running = false;
 
 
         tasks.forEach(p-> {
@@ -178,6 +176,7 @@ public class Sitemap implements Serializable {
     {
         return bytesPerTask;
     }
+
 
     private WebDriver getWebdriverOfChoice(String webDriverName){
 
