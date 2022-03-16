@@ -23,6 +23,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Main screen of the application.
+ *
+ */
 public class SitemapController extends GridPane
 {
 	Map<String, String> settings;
@@ -146,7 +150,6 @@ public class SitemapController extends GridPane
 				{
 					progressStage = new ProgressStage(current.get(), Math.min(current.get().getTasks().size(), NR_OF_DRIVERS));
 					scheduleScraper(sitemap,scrapeSettings,mongoDbHandler, progressStage.getRunnable());
-					progressStage.show();
 				});
 			}
 		});
@@ -203,12 +206,19 @@ public class SitemapController extends GridPane
 		System.setProperty("webdriver.ie.driver", driverPath + "IEDriverServer" + fileExtension);
 	}
 
+	/**
+	 * Saves the sitemaps to the current directory
+	 * @return true if successful
+	 */
 	public boolean saveSitemaps(){
 		sitemaps.forEach(Sitemap::clearData);
 		sitemaps.forEach(s-> s.setRunning(false));
 		return SitemapHandler.saveSitemaps(sitemapSourceDir,sitemaps);
 	}
 
+	/**
+	 * Save settings to config file
+	 */
 	public void saveSettings()
 	{
 		try
@@ -218,6 +228,10 @@ public class SitemapController extends GridPane
 		catch (IOException ignored) {}
 	}
 
+	/**
+	 * Updates buttons, textfields and Listviews
+	 * depending on which sitemap is currently selected.
+	 */
 	private void updateFields(){
 		dataPreview.setText("");
 		taskList.getItems().clear();
@@ -239,19 +253,26 @@ public class SitemapController extends GridPane
 		sitemapList.setItems(FXCollections.observableArrayList(sitemaps));
 	}
 
+	/**
+	 * Connect to MongoDb through settings string
+	 */
 	private void connectToDb(){
 		String s = settings.get("dbConnection");
 		if(s!=null){
 			mongoDbHandler.tryConnect(s);
 		}
 	}
+
+	/**
+	 * Saves scheduled scrapes to a file.
+	 */
 	public void saveScheduledScrapes() {
 		ObjectOutputStream oos;
 		try {
 			oos= new ObjectOutputStream(new FileOutputStream(System.getProperty("user.dir")+"/scheduledSitemaps.ssm"));
 			scheduledScrapes.forEach(scheduled -> {
 				try {
-					oos.writeObject(Pair.of(scheduled.sitemap,scheduled.settings));
+					oos.writeObject(Pair.of(scheduled.sitemap,scheduled.settings)); // Write a pair of a sitemap object and a its corresponding scrape settings
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -263,6 +284,11 @@ public class SitemapController extends GridPane
 		}
 
 	}
+
+	/**
+	 * Loads Pair of Sitemap objects and ScrapeSettings from the file "scheduledSitemaps.ssm"
+	 * and re-schedules them.
+	 */
 	public void loadScheduledScrapes(){
 		ObjectInputStream ois;
 		try {
@@ -273,15 +299,19 @@ public class SitemapController extends GridPane
 			}
 			ois = new ObjectInputStream(new FileInputStream(file));
 			while(true){
-				Pair<Sitemap,ScrapeSettings> pair = (Pair<Sitemap,ScrapeSettings>) ois.readObject();
+				Pair<Sitemap,ScrapeSettings> pair = (Pair<Sitemap,ScrapeSettings>) ois.readObject(); // read serialized object from file
 				pair.second.NO_DRIVERS = NR_OF_DRIVERS;
 				pair.second.localStorageLocation = defaultStorageLocation;
-				scheduleScraper(pair.first,pair.second,mongoDbHandler,()->{});
+				progressStage = new ProgressStage(pair.first, Math.min(pair.first.getTasks().size(), NR_OF_DRIVERS)); // add progressStage
+				scheduleScraper(pair.first,pair.second,mongoDbHandler, progressStage.getRunnable()); // re-schedule the Sitemap for execution
 			}
 		} catch (IOException | ClassNotFoundException ignored) {
 		}
 	}
 
+	/**
+	 * Creates the menu bar at the top of the scene
+	 */
 	private void menuBar(){
 		//creating menu bar
 		MenuBar menuBar=new MenuBar();
@@ -324,9 +354,10 @@ public class SitemapController extends GridPane
 	 * @param sitemap, the sitemap to be scraped
 	 * @param settings, the settings for the scrape
 	 * @param mongoDbHandler, for writing to mongodb
+	 * @param update, the Runnable which will update the progressbar
 	 */
 	private void scheduleScraper(Sitemap sitemap,ScrapeSettings settings,MongoDbHandler mongoDbHandler, Runnable update){
-
+		// Calculate start time
 		java.time.Duration startIn = java.time.Duration.between(LocalDateTime.now(),settings.startAt);
 		if(settings.startAt.isBefore(LocalDateTime.now())){
 			startIn = java.time.Duration.ofSeconds(0);
@@ -338,11 +369,9 @@ public class SitemapController extends GridPane
 		service.setDelay(Duration.seconds(startIn.toSeconds())); // set start time of first scrape
 		service.setPeriod(Duration.seconds(settings.interval.toSeconds())); // set the interval between scrapers
 		service.setOnSucceeded(t -> { // when a scrape has succeeded
-			System.out.println("Called : " + t.getSource().getValue()
-					+ " time(s)");
 			if(settings.repetitions <= (Integer)t.getSource().getValue()){ // cancel new scrape if it has reached max repetitions
 				t.getSource().cancel();
-				scheduledScrapes.removeIf(timerService -> timerService.equals(service));
+				scheduledScrapes.removeIf(timerService -> timerService.equals(service)); // remove if previously scheduled
 			}
 			count.set((int) t.getSource().getValue());
 			updateSitemapListView();
@@ -350,7 +379,7 @@ public class SitemapController extends GridPane
 
 			if (progressStage != null)
 			{
-				List<java.time.Duration> times = sitemap.getTimes().stream().map(AtomicReference::get).toList();
+				List<java.time.Duration> times = sitemap.getTimes().stream().map(AtomicReference::get).toList(); // fetch scraping times
 				java.time.Duration totalTime = java.time.Duration.ZERO;
 				for (java.time.Duration d : times)
 				{
@@ -359,7 +388,7 @@ public class SitemapController extends GridPane
 
 				Timer closeTimer = new Timer();
 				java.time.Duration finalTotalTime = totalTime;
-				closeTimer.schedule(new TimerTask()
+				closeTimer.schedule(new TimerTask() // TimerTask for closing the progressbar and showing the popup with statistics
 				{
 					@Override
 					public void run()
@@ -381,9 +410,9 @@ public class SitemapController extends GridPane
 				t.getSource().cancel();
 			}
 		});
-		service.setOnRunning(t-> progressStage.show());
+		service.setOnRunning(t-> progressStage.show()); // show progressbar when the scraping begins
 
-		service.setOnFailed(t->{
+		service.setOnFailed(t->{ // show alert-box if something went wrong during execution
 			scheduledScrapes.removeIf(timerService -> timerService.equals(service));
 			if (progressStage != null){
 				progressStage.close();
@@ -396,12 +425,15 @@ public class SitemapController extends GridPane
 		service.setRestartOnFailure(false);
 
 		service.start();
-		if(startIn==java.time.Duration.ofSeconds(0)){
+		if(startIn==java.time.Duration.ofSeconds(0)){ // dont add scrapes that start immediately to the scheduled list
 			return;
 		}
 		scheduledScrapes.add(service);
 	}
 
+	/**
+	 * A class that will be scheduled to run in the future
+	 */
 	public static class TimerService extends ScheduledService<Integer>  {
 		Sitemap sitemap;
 		ScrapeSettings settings;
@@ -424,20 +456,26 @@ public class SitemapController extends GridPane
 		public final IntegerProperty countProperty() {
 			return count;
 		}
+
+		/**
+		 * Runs the scraper of the sitemap and then stores the data
+		 * with the specified settings in 'this.settings'.
+		 *
+		 * @return an integer telling the caller how many times the createTask() function has been run.
+		 */
 		protected Task<Integer> createTask() {
 			return new Task<>() {
 				protected Integer call() throws ExecutionException, InterruptedException {
-					sitemap.clearData();
-
-					sitemap.runMultiThreadedScraper(settings.NO_DRIVERS, update, settings.webDriverName);
-					if (settings.saveLocal) {
+					sitemap.clearData(); // clear data from previous scrapes
+					sitemap.runMultiThreadedScraper(settings.NO_DRIVERS, update, settings.webDriverName); // run web scraper
+					if (settings.saveLocal) { // save the data locally
 						if (settings.dataFormat == DATA_FORMAT.json) {
 							DataHandler.toJSONFile(settings.groupby, sitemap, settings.localStorageLocation + "/" + sitemap.getName() + ".json");
 						} else if (settings.dataFormat == DATA_FORMAT.csv) {
 							DataHandler.toCSVFile(settings.groupby, sitemap, settings.localStorageLocation + "/" + sitemap.getName() + ".csv");
 						}
 					}
-					if (settings.saveDb) {
+					if (settings.saveDb) { // save to database
 						mongoDbHandler.storeJsonInDb(settings.dbStorageSettings, DataHandler.toJSONList(settings.groupby, sitemap));
 					}
 					//Adds 1 to the count
