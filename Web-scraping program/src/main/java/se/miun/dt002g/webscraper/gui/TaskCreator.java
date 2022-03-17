@@ -46,7 +46,7 @@ public class TaskCreator extends GridPane
 		setHgap(10);
 		setStyle("-fx-border-insets: 5px; -fx-padding: 5px;");
 
-		Label createLabel = new Label("Create New Task");
+		Label createLabel = new Label("Create New Task Chain");
 		createLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 20px");
 
 		Label addTaskLabel = new Label("Task Type ");
@@ -113,8 +113,9 @@ public class TaskCreator extends GridPane
 
 		Button addButton = new Button("Add Task"),
 				removeButton = new Button("Remove Task"),
-				saveButton = new Button("Save Task");
+				saveButton = new Button("Save Chain");
 		addButton.setMinWidth(50);
+		addButton.setStyle("-fx-background-color: lightblue;");
 		removeButton.setMinWidth(50);
 		saveButton.setMinWidth(50);
 		addButton.setTooltip(new Tooltip("Adds a task with the currently selected options"));
@@ -123,7 +124,7 @@ public class TaskCreator extends GridPane
 
 		HBox buttonHBox = new HBox(5, addButton, removeButton, saveButton);
 
-		Label taskListLabel = new Label("Task List");
+		Label taskListLabel = new Label("Task Chain");
 		taskListLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
 		ListView<Task> taskList = new ListView<>();
 		taskList.setItems(FXCollections.observableArrayList(tasks));
