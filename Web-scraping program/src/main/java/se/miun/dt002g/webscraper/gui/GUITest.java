@@ -13,7 +13,7 @@ public class GUITest extends Application
 
 		sitemapController = new SitemapController();
 		Scene scene = new Scene(sitemapController);
-
+		stage.setTitle("Web scraping application");
 		stage.setScene(scene);
 		stage.setResizable(false);
 		stage.sizeToScene();

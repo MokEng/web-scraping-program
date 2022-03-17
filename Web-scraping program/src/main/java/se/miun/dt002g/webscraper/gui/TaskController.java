@@ -58,7 +58,7 @@ public class TaskController extends GridPane
 			Stage addStage = new Stage();
 			addStage.setResizable(false);
 			addStage.initModality(Modality.APPLICATION_MODAL);
-			addStage.setTitle("Create New Task");
+			addStage.setTitle("New Task Chain");
 			TaskCreator taskCreator = new TaskCreator(baseURL, null);
 			addStage.setScene(new Scene(taskCreator));
 			addStage.sizeToScene();
@@ -84,7 +84,7 @@ public class TaskController extends GridPane
 				Stage addStage = new Stage();
 				addStage.setResizable(false);
 				addStage.initModality(Modality.APPLICATION_MODAL);
-				addStage.setTitle("Edit Task");
+				addStage.setTitle("Edit Task Chain");
 				TaskCreator taskCreator = new TaskCreator(baseURL, editTask.get());
 				addStage.setScene(new Scene(taskCreator));
 				addStage.sizeToScene();
