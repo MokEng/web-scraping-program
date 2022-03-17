@@ -159,7 +159,7 @@ public class SitemapController extends GridPane
 		selectedSitemapLabel = new Label("Sitemap Branches");
 
 		dataPreview = new TextArea();
-		dataPreview.setPromptText("No data scraped for this task.");
+		dataPreview.setPromptText("Data preview not available");
 		selectedSitemapLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
 
 		setVgap(10);
