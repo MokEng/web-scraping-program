@@ -54,6 +54,10 @@ public class StatsPopup
 			taskTimeText.setText("Scraping duration: " + timePerTask.get(i).toMillis());
 		});
 
+		Label timePieChartLabel = new Label("Task Duration"),
+				dataPieChartLabel = new Label("Task Data Size");
+		timePieChartLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
+		dataPieChartLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
 		PieChart timePieChart = new PieChart(),
 				dataPieChart = new PieChart();
 
@@ -74,8 +78,10 @@ public class StatsPopup
 		mainPane.add(totalTimeText, 1, 1);
 		mainPane.add(taskList,0, 2);
 		mainPane.add(taskDataVBox, 1, 2);
-		mainPane.add(dataPieChart, 0, 3);
-		mainPane.add(timePieChart, 1, 3);
+		mainPane.add(dataPieChartLabel, 0, 3);
+		mainPane.add(timePieChartLabel, 1, 3);
+		mainPane.add(dataPieChart, 0, 4);
+		mainPane.add(timePieChart, 1, 4);
 
 		statsStage.setScene(new Scene(mainPane));
 		statsStage.sizeToScene();
