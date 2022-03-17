@@ -28,9 +28,8 @@ public class StatsPopup
 				totalTimeLabel = new Label("Total scraping duration ");
 		totalBytesLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
 		totalTimeLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
-
 		Text totalBytesText = new Text("" + nBytesTotal + " bytes"),
-				totalTimeText = new Text("" + timeTotal.getSeconds() + " seconds");
+				totalTimeText = new Text("" + timeTotal.getSeconds() + "." + timeTotal.toMillisPart() + " seconds");
 		totalBytesText.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
 		totalTimeText.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
 
@@ -51,7 +50,7 @@ public class StatsPopup
 		{
 			int i = taskList.getSelectionModel().getSelectedIndex();
 			taskBytesText.setText("Bytes scraped: " + ((nBytesPerTask.get(i) == -1) ? 0 : nBytesPerTask.get(i)));
-			taskTimeText.setText("Scraping duration: " + timePerTask.get(i).toMillis());
+			taskTimeText.setText("Scraping duration: " + timePerTask.get(i).getSeconds() + "." + timePerTask.get(i).toMillisPart() + " seconds");
 		});
 
 		Label timePieChartLabel = new Label("Task Duration"),
@@ -65,8 +64,8 @@ public class StatsPopup
 		{
 			if (nBytesPerTask.get(i) != -1)
 			{
-				dataPieChart.getData().add(new PieChart.Data(tasks.get(i), nBytesPerTask.get(i)));
-				timePieChart.getData().add(new PieChart.Data(tasks.get(i), timePerTask.get(i).toMillis()));
+				dataPieChart.getData().add(new PieChart.Data(tasks.get(i).substring(tasks.get(i).indexOf("(")+1, tasks.get(i).indexOf(",")), nBytesPerTask.get(i)));
+				timePieChart.getData().add(new PieChart.Data(tasks.get(i).substring(tasks.get(i).indexOf("(")+1, tasks.get(i).indexOf(",")), timePerTask.get(i).toMillis()));
 			}
 		}
 
@@ -84,8 +83,8 @@ public class StatsPopup
 		mainPane.add(timePieChart, 1, 4);
 
 		statsStage.setScene(new Scene(mainPane));
-		statsStage.sizeToScene();
-		statsStage.setResizable(false);
+		statsStage.setWidth(700);
+		statsStage.setHeight(600);
 		statsStage.setTitle("Scraping Summary");
 		statsStage.initModality(Modality.APPLICATION_MODAL);
 		statsStage.showAndWait();
