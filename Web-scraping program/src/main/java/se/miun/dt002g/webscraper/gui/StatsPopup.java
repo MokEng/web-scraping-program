@@ -3,6 +3,7 @@ package se.miun.dt002g.webscraper.gui;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
+import javafx.scene.chart.PieChart;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.GridPane;
@@ -53,6 +54,18 @@ public class StatsPopup
 			taskTimeText.setText("Scraping duration: " + timePerTask.get(i).toMillis());
 		});
 
+		PieChart timePieChart = new PieChart(),
+				dataPieChart = new PieChart();
+
+		for (int i = 0; i < tasks.size(); i++)
+		{
+			if (nBytesPerTask.get(i) != -1)
+			{
+				dataPieChart.getData().add(new PieChart.Data(tasks.get(i), nBytesPerTask.get(i)));
+				timePieChart.getData().add(new PieChart.Data(tasks.get(i), timePerTask.get(i).toMillis()));
+			}
+		}
+
 		mainPane.setVgap(5);
 		mainPane.setHgap(5);
 		mainPane.add(totalBytesLabel, 0, 0);
@@ -61,6 +74,8 @@ public class StatsPopup
 		mainPane.add(totalTimeText, 1, 1);
 		mainPane.add(taskList,0, 2);
 		mainPane.add(taskDataVBox, 1, 2);
+		mainPane.add(dataPieChart, 0, 3);
+		mainPane.add(timePieChart, 1, 3);
 
 		statsStage.setScene(new Scene(mainPane));
 		statsStage.sizeToScene();
