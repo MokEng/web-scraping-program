@@ -110,7 +110,10 @@ public class TaskCreator extends GridPane
 		Button selectParentButton = new Button("Select Parent");
 		selectParentButton.setMinWidth(50);
 		selectParentButton.setTooltip(new Tooltip("Select the element containing the current selected element"));
-		HBox domManipButtonHBox = new HBox(5, backArrowButton, selectChildrenButton, selectSiblingsButton, selectParentButton);
+		Button goToRootButton = new Button("Go to Root");
+		goToRootButton.setMinWidth(50);
+		goToRootButton.setTooltip(new Tooltip("Navigates to the root URL"));
+		HBox domManipButtonHBox = new HBox(5, backArrowButton, selectChildrenButton, selectSiblingsButton, selectParentButton, goToRootButton);
 
 		Button addButton = new Button("Add Task"),
 				removeButton = new Button("Remove Task"),
@@ -120,7 +123,7 @@ public class TaskCreator extends GridPane
 		removeButton.setMinWidth(50);
 		saveButton.setMinWidth(50);
 		addButton.setTooltip(new Tooltip("Adds a task with the currently selected options"));
-		removeButton.setTooltip(new Tooltip("Removes the lastest task from the list"));
+		removeButton.setTooltip(new Tooltip("Removes the latest task from the list"));
 		saveButton.setTooltip(new Tooltip("Saves and combines all tasks in the list and adds it to the sitemap"));
 
 		HBox buttonHBox = new HBox(5, addButton, removeButton, saveButton);
@@ -224,7 +227,7 @@ public class TaskCreator extends GridPane
 			if (!tasks.isEmpty())
 			{
 				Task task = tasks.pop();
-				if (task instanceof NavigateTask)
+				/*if (task instanceof NavigateTask)
 				{
 					if (Objects.equals(task.id, "back"))
 					{
@@ -234,14 +237,14 @@ public class TaskCreator extends GridPane
 					{
 						webView.getEngine().executeScript("history.back()");
 					}
-				}
+				}*/
 				taskList.setItems(FXCollections.observableArrayList(tasks));
-				lastestButtonPressed = "remove";
+				/*lastestButtonPressed = "remove";*/
 			}
 		});
-		webView.getEngine().locationProperty().addListener((observable, oldValue, newValue) ->
+		/*webView.getEngine().locationProperty().addListener((observable, oldValue, newValue) ->
 		{
-			/*if (!tasks.isEmpty() && !lastestButtonPressed.equals("remove"))
+			if (!tasks.isEmpty() && !lastestButtonPressed.equals("remove"))
 			{
 				tasks.pop();
 
@@ -250,8 +253,8 @@ public class TaskCreator extends GridPane
 				else navigateTask = new NavigateTask(newValue, tasks.peek(), "navigate");
 				tasks.push(navigateTask);
 				taskList.setItems(FXCollections.observableArrayList(tasks));
-			}*/
-		});
+			}
+		});*/
 
 		webView.getEngine().getLoadWorker().stateProperty().addListener((observable, oldValue, newValue) -> {
 			if (newValue == Worker.State.SUCCEEDED)
@@ -300,7 +303,10 @@ public class TaskCreator extends GridPane
 			}
 		});
 
-		saveButton.setOnAction(event -> ((Stage)getScene().getWindow()).close());
+		saveButton.setOnAction(event ->
+		{
+			((Stage)getScene().getWindow()).close();
+		});
 
 		selectChildrenButton.setOnAction(event ->
 		{
@@ -375,6 +381,13 @@ public class TaskCreator extends GridPane
 				e.setClassName(e.getClassName() + " selectedNode");
 				urlPathField.setText(NodeUtilities.getXPath(selectedNode));
 			}
+		});
+
+		goToRootButton.setOnAction(event ->
+		{
+			tasks.push(new NavigateTask(url, ""));
+			taskList.setItems(FXCollections.observableArrayList(tasks));
+			webView.getEngine().load(url);
 		});
 
 		add(createLabel, 0, 0, 2, 1);
