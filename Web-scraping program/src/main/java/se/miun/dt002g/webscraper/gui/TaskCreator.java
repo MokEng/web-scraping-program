@@ -200,14 +200,14 @@ public class TaskCreator extends GridPane
 			WebHistory history = webView.getEngine().getHistory();
 			if (history.getCurrentIndex() != 0)
 			{
-				if(selectButton.isSelected()){
-					NavigateTask navigateTask;
-					String backUrl = history.getEntries().get(history.getCurrentIndex() - 1).getUrl();
-					if (tasks.isEmpty()) navigateTask = new NavigateTask(backUrl, "back");
-					else navigateTask = new NavigateTask(backUrl, tasks.peek(), "back");
-					tasks.push(navigateTask);
-					taskList.setItems(FXCollections.observableArrayList(tasks));
-				}
+
+				NavigateTask navigateTask;
+				String backUrl = history.getEntries().get(history.getCurrentIndex() - 1).getUrl();
+				if (tasks.isEmpty()) navigateTask = new NavigateTask(backUrl, "back");
+				else navigateTask = new NavigateTask(backUrl, tasks.peek(), "back");
+				tasks.push(navigateTask);
+				taskList.setItems(FXCollections.observableArrayList(tasks));
+
 				Platform.runLater(() -> webView.getEngine().executeScript("history.back()"));
 				lastestButtonPressed = "back";
 			}
@@ -236,13 +236,13 @@ public class TaskCreator extends GridPane
 		{
 			if (!tasks.isEmpty() && !lastestButtonPressed.equals("remove"))
 			{
-				/*tasks.pop();
+				tasks.pop();
 
 				NavigateTask navigateTask;
 				if (tasks.isEmpty()) navigateTask = new NavigateTask(newValue, "navigate");
 				else navigateTask = new NavigateTask(newValue, tasks.peek(), "navigate");
 				tasks.push(navigateTask);
-				taskList.setItems(FXCollections.observableArrayList(tasks));*/
+				taskList.setItems(FXCollections.observableArrayList(tasks));
 			}
 		});
 
@@ -282,11 +282,11 @@ public class TaskCreator extends GridPane
 							if (tasks.isEmpty()) clickTask = new ClickTask(NodeUtilities.getXPath((Node)evt.getTarget()), "");
 							else clickTask = new ClickTask(NodeUtilities.getXPath((Node)evt.getTarget()), tasks.peek(), "");
 
-							/*if (tasks.isEmpty() || !Objects.equals(tasks.peek().toString(), clickTask.toString()))
+							if (tasks.isEmpty() || !Objects.equals(tasks.peek().toString(), clickTask.toString()))
 							{
 								tasks.push(clickTask);
 								taskList.setItems(FXCollections.observableArrayList(tasks));
-							}*/
+							}
 						}
 					});
 				}
