@@ -34,6 +34,7 @@ public class TaskCreator extends GridPane
 
 	private final Stack<Task> tasks;
 	private String lastestButtonPressed = "";
+	private boolean firstLoad = true;
 
 	private WebView webView;
 
@@ -177,6 +178,11 @@ public class TaskCreator extends GridPane
 				case "Navigate" ->
 				{
 					String navigateUrl = urlPathField.getText();
+					if (!navigateUrl.startsWith("http://") && !navigateUrl.startsWith("https://"))
+					{
+						navigateUrl = "https://" + navigateUrl; // Add https to url if not provided by the user.
+					}
+
 					if (navigateUrl != null && !navigateUrl.isEmpty() && selectedNodes == null)
 					{
 						NavigateTask navigateTask;
@@ -184,6 +190,7 @@ public class TaskCreator extends GridPane
 						else navigateTask = new NavigateTask(navigateUrl, tasks.peek(), "navigate");
 						tasks.push(navigateTask);
 						taskList.setItems(FXCollections.observableArrayList(tasks));
+
 
 						webView.getEngine().load(navigateUrl);
 					}
@@ -234,7 +241,7 @@ public class TaskCreator extends GridPane
 		});
 		webView.getEngine().locationProperty().addListener((observable, oldValue, newValue) ->
 		{
-			if (!tasks.isEmpty() && !lastestButtonPressed.equals("remove"))
+			/*if (!tasks.isEmpty() && !lastestButtonPressed.equals("remove"))
 			{
 				tasks.pop();
 
@@ -243,7 +250,7 @@ public class TaskCreator extends GridPane
 				else navigateTask = new NavigateTask(newValue, tasks.peek(), "navigate");
 				tasks.push(navigateTask);
 				taskList.setItems(FXCollections.observableArrayList(tasks));
-			}
+			}*/
 		});
 
 		webView.getEngine().getLoadWorker().stateProperty().addListener((observable, oldValue, newValue) -> {
