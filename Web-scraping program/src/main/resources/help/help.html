@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Help - Webscraper</title>
+		<meta charset="utf-8">
+	</head>
+	
+	<body>
+		<h1>Help - Webscraper program</h1>
+		<br>
+		<ol>
+			<li><a href="#sitemap">Creating/editing a sitemap</a></li>
+			<li><a href="#task">Creating/editing tasks</a></li>
+			<li><a href="#settings">Program settings</a></li>
+			<li><a href="#run">Running/Scheduling a sitemap</a></li>
+		</ol>
+		<br>
+		
+		<h2 id="sitemap">Creating/editing a sitemap</h2>
+		<p>
+			This window displays all created sitemaps in the list on the left. Selecting a sitemap from the list displays all tasks contained in the sitemap in the list on the right.<br>
+			The box at the bottom displays the data collected if the scraper has been run using this sitemap.<br>
+			New sitemaps can be created by pressing "<b>New</b>", and sitemaps can be edited by pressing "<b>Edit</b>". Sitemaps can also be deleted and saved using "<b>Save</b>" and "<b>Delete</b>".<br>
+			If you want to run or schedule a sitemap, press "<b>Run</b>" or "<b>Schedule</b>" while having a sitemap selected.<br>
+		</p>
+		<img src="sitemap.png" /><br>
+		<p>
+			When you create a new sitemap, you have to enter the base URL and name. The base URL is the URL that all tasks in the sitemap will start from.
+		</p>
+		<img src="sitemap2.png" /><br>
+		<p>
+			This window displays the tasks that are in the sitemap. Tasks can be created or edited by pressing "<b>New</b>" or "<b>Edit</b>" while a task is selected in the list.<br>
+			Tasks can also be deleted from the sitemap by pressing "<b>Delete</b>"
+		</p>
+		<img src="sitemap3.png" /><br><br>
+		
+		<h2 id="task">Creating/editing tasks</h2>
+		<p>
+			This window allows you to create Tasks.<br>
+			At the top you can select the type of task you want to create. "<b>Text</b>" tasks extract and collect text from elements on the page, <br>
+			"<b>Click</b>" simulates a mouse click on an element on the page, and "<b>Navigate</b>" allows you to navigate the scraper to a new URL.<br>
+			Clicking on "<b>Select Element</b>" and then clicking on the webpage allows you to select that element. The element will by highlighted and the xPath field will be filled with the path to that element.<br>
+			If you want to select other elements connected to the currently selected element, you can use the other "<b>Select</b>" button to select all the elements in the current element, <br>
+			all elements in the same parent element as the currently selected one, and the element the contains the current element. You can also press the "<b>&lt;-</b>" to navigate back on step in the webpage history.<br>
+			If you want to add a task with the currently selected options, press "<b>Add Task</b>" to add it to the sitemap. Press "<b>Remove Task</b>" to remove the latest task from the sitemap.<br>
+			When you are done with adding tasks, press "<b>Save Chain</b>" or close the window to save the task in the sitemap.
+		</p>
+		<img src="task.png" /><br><br>
+		
+		<h2 id="settings">Program settings</h2>
+		<p>
+			You can access the settings from the "<b>File</b>" menu in the starting window of the application.<br>
+			If you are going to store the data locally on you computer, you can specify the storage location by pressing "<b>Open</b>" and navigating to the desired directory.<br>
+			If you want to store the data on a MongoDB database, paste the connection string into the field and press "<b>Connect</b>". If the connection string is correct, the text next to the button will turn green.<br>
+			You can select what web driver to use from the dropdown menu. If you want to download more drivers, click on the link which will take you to a page with download links. <br>
+			Remember that the driver version you download must match the version of the same browser you have installed. <br>
+			After the download is finished, press the "<b>Place drivers here</b>" to open the directory where you should place the driver files.<br>
+			If you want to speed up the scraping, you can increase the amount of drivers that can run at the same time by moving the slider.<br>
+			Keep in mind that more drivers running at the same time results in more memory and CPU usage. The maximum number of drivers you can select is limited by your computer's logical cores.<br>
+			If a sitemap only contains a few number of tasks, increasing the number of drivers will have no effect, since a task cannot run on two drivers at the same time.
+		</p>
+		<img src="settings.png" /><br><br>
+		
+		<h2 id="run">Running/Scheduling a sitemap</h2>
+		<p>
+			You can specify if you want to store the data locally, on a database, or both, by click the "<b>Local Storage</b>" and "<b>MongoDb</b>" buttons.<br>
+			You can choose between storing the data as a .json or .csv file by using the dropdown menu.<br>
+			If you have provided a connection string and connected to MongoDB in the settings, you can specify which database and collection to store the data in.<br>
+			You can also remove all the data that was previously in the connection be enabling the right button<br>
+			If you are scheduling the scraping, you can select the date and time using the controls.<br>
+			Start/schedule the scraping by pressing the "<b>Run</b>"/"<b>Schedule</b>" button.
+		</p>
+		<img src="run.png" /><br>
+		<p>
+			While the scraper is running, a progress window is displayed. The amount of drivers currently running and how many has finished scraping is displayed until the scraping is done.
+		</p>
+		<img src="running.png" /><br>
+		<p>
+			Once the scraping is done, the results window opens. In this window you can see how much data was scraped and how long the scraping took.<br>
+			You can also choose individual tasks from the list and see the data and time amount for each of them aswell.<br>
+			If a task failed for some reason, it will have the text "[Failed]" at the end, so that you know that something went wrong.<br>
+			At the bottom are two pie charts that display how much data each task scraped and the duration of each task.
+		</p>
+		<img src="results.png" /><br>
+	</body>
+</html>

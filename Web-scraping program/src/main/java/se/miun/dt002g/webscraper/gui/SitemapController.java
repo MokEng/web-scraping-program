@@ -10,6 +10,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -330,6 +331,21 @@ public class SitemapController extends GridPane
 			ScheduledScrapersController s = new ScheduledScrapersController(scheduledScrapes);
 
 		});
+		MenuItem helpButton = new MenuItem("Show Manual");
+		helpButton.setOnAction(event ->
+		{
+			Stage helpStage = new Stage();
+			WebView helpWebView = new WebView();
+			try
+			{
+				helpWebView.getEngine().load(new File("help/help.html").toURI().toString());
+				helpStage.setScene(new Scene(helpWebView));
+				helpStage.sizeToScene();
+				helpStage.setTitle("Help");
+				helpStage.show();
+			}
+			catch (NullPointerException ignored) { }
+		});
 		MenuItem quitApp=new MenuItem("Quit App");
 		quitApp.setStyle("-fx-font-weight: bold; -fx-font-size: 12px");
 		quitApp.setOnAction(event -> { // close application
@@ -339,6 +355,7 @@ public class SitemapController extends GridPane
 		//adding menu items to the menu
 		menu.getItems().add(settingsButton);
 		menu.getItems().add(scheduledScraper);
+		menu.getItems().add(helpButton);
 		menu.getItems().add(new SeparatorMenuItem());
 		menu.getItems().add(quitApp);
 		//adding menu to the menu bar
