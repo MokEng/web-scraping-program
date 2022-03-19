@@ -325,6 +325,7 @@ public class SitemapController extends GridPane
 			SettingsController settingsController = new SettingsController(settings,mongoDbHandler);
 			settings = settingsController.getSettings();
 			NR_OF_DRIVERS = Integer.parseInt(String.valueOf(settings.get("threadAmount")));
+			defaultStorageLocation = settings.getOrDefault("storageLocation",System.getProperty("user.dir"));
 		});
 		MenuItem scheduledScraper = new MenuItem("Scheduled Scrapes");
 		scheduledScraper.setOnAction(event -> {
