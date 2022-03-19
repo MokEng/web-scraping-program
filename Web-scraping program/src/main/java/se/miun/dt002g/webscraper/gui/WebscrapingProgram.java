@@ -4,13 +4,16 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-public class GUITest extends Application
+/**
+ * Class that launches the program.
+ */
+public class WebscrapingProgram extends Application
 {
 	SitemapController sitemapController;
 	@Override
 	public void start(Stage stage)
 	{
-
+		// Creates and shows the SitemapController window.
 		sitemapController = new SitemapController();
 		Scene scene = new Scene(sitemapController);
 		stage.setTitle("Web scraping application");
@@ -22,6 +25,7 @@ public class GUITest extends Application
 
 	@Override
 	public void stop() throws Exception {
+		// Saves the settings, sitemaps, and scheduled sitemaps when the program closes.
 		super.stop();
 		sitemapController.saveSitemaps();
 		sitemapController.saveSettings();

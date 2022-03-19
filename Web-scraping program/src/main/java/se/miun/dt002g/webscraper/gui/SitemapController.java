@@ -26,14 +26,13 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Main screen of the application.
- *
  */
 public class SitemapController extends GridPane
 {
-	Map<String, String> settings;
-	List<TimerService> scheduledScrapes=new ArrayList<>();
-	List<Sitemap> sitemaps;
-	String sitemapSourceDir;
+	Map<String, String> settings; // Program settings.
+	List<TimerService> scheduledScrapes = new ArrayList<>(); // All currently scheduled scrapings.
+	List<Sitemap> sitemaps; // All loaded sitemaps.
+	String sitemapSourceDir; // The directory containing sitemaps.
 	TextArea dataPreview;
 	ListView<Sitemap> sitemapList;
 	ListView<se.miun.dt002g.webscraper.scraper.Task> taskList;
@@ -50,18 +49,23 @@ public class SitemapController extends GridPane
 			scheduleButton = new Button("Schedule");
 	int NR_OF_DRIVERS;
 	MongoDbHandler mongoDbHandler = new MongoDbHandler();
-	ProgressStage progressStage = null;
+	ProgressStage progressStage = null; // Stage for the progress window.
 
 	public SitemapController()
 	{
+		// Load settings.
 		settings = new HashMap<>();
 		if (!SettingsController.loadSettings(settings)) System.out.println("No settings.cfg was found.");
 		NR_OF_DRIVERS = Integer.parseInt(settings.getOrDefault("threadAmount", "1"));
 		setDriverSystemProperties();
+
 		connectToDb();
 		loadScheduledScrapes();
+
 		defaultStorageLocation = settings.getOrDefault("storageLocation",System.getProperty("user.dir"));
-		menuBar();
+
+		menuBar(); // Create menu bar.
+
 		sitemapList = new ListView<>();
 		mainLabel = new Label("Sitemaps");
 		mainLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 20px");
@@ -71,7 +75,7 @@ public class SitemapController extends GridPane
 		deleteButton.setMinWidth(50);
 		saveButton.setMinWidth(50);
 
-		addButton.setOnAction(event ->
+		addButton.setOnAction(event -> // Run the EnterBaseURLPopup and then show the sitemap editing window.
 		{
 			String baseURL, sitemapName;
 			EnterBaseURLPopup popup = new EnterBaseURLPopup();
@@ -95,13 +99,15 @@ public class SitemapController extends GridPane
 			}
 		});
 
-		editButton.setOnAction(event -> {
+		editButton.setOnAction(event -> // Open the sitemap editing window.
+		{
 			Stage addStage = new Stage();
 			addStage.setResizable(false);
 			addStage.initModality(Modality.APPLICATION_MODAL);
 			addStage.setTitle("Edit Sitemap");
 			Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s, sitemapList.getSelectionModel().getSelectedItem())).findAny();
-			if(current.isPresent()){
+			if(current.isPresent()) // If a sitemap is currently selected.
+			{
 				addStage.setScene(new Scene(new TaskController(current.get().getRootUrl(),current.get())));
 				addStage.sizeToScene();
 				addStage.showAndWait();
@@ -113,31 +119,45 @@ public class SitemapController extends GridPane
 
 		runButton.setMinWidth(65);
 		scheduleButton.setMinWidth(65);
-		scheduleButton.setOnAction(event ->{
-			if(sitemapList.getSelectionModel().getSelectedItem() == null){
+		scheduleButton.setOnAction(event ->
+		{
+			if(sitemapList.getSelectionModel().getSelectedItem() == null) // If no sitemap is selected.
+			{
 				return;
 			}
+
+			// Open the scheduling window.
 			ScheduleScraperPopup popup = new ScheduleScraperPopup(sitemapList.getSelectionModel().getSelectedItem().getName(),mongoDbHandler,settings);
-			if(popup.isRunScraper()){
+
+			if(popup.isRunScraper()) // If the scraper should be scheduled.
+			{
 				Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s, sitemapList.getSelectionModel().getSelectedItem())).findAny();
 				ScrapeSettings scrapeSettings = popup.getScrapeSettings();
 				scrapeSettings.localStorageLocation = defaultStorageLocation;
 				scrapeSettings.NO_DRIVERS = NR_OF_DRIVERS;
 				scrapeSettings.repetitions = 0;
 				scrapeSettings.interval = java.time.Duration.ofSeconds(0);
-				current.ifPresent(sitemap -> {
+				current.ifPresent(sitemap -> // If a sitemap is selected.
+				{
+					// Schedules the scraping.
 					progressStage = new ProgressStage(current.get(), Math.min(current.get().getTasks().size(), NR_OF_DRIVERS));
 					scheduleScraper(sitemap,scrapeSettings,mongoDbHandler, progressStage.getRunnable());
 				});
 			}
 		});
 
-		runButton.setOnAction(event -> {
-			if(sitemapList.getSelectionModel().getSelectedItem() == null){
+		runButton.setOnAction(event ->
+		{
+			if(sitemapList.getSelectionModel().getSelectedItem() == null) // If no sitemap is selected.
+			{
 				return;
 			}
+
+			// Opens the run configuration window.
 			RunScraperPopup popup = new RunScraperPopup(sitemapList.getSelectionModel().getSelectedItem().getName(),mongoDbHandler,settings);
-			if(popup.isRunScraper()){
+
+			if(popup.isRunScraper()) // If the scraper should run.
+			{
 				Optional<Sitemap> current = sitemaps.stream().filter(s-> Objects.equals(s, sitemapList.getSelectionModel().getSelectedItem())).findAny();
 				ScrapeSettings scrapeSettings = popup.getScrapeSettings();
 				scrapeSettings.localStorageLocation = defaultStorageLocation;
@@ -147,8 +167,9 @@ public class SitemapController extends GridPane
 				scrapeSettings.interval = java.time.Duration.ofSeconds(0);
 				scrapeSettings.startAt = LocalDateTime.now();
 
-				current.ifPresent(sitemap ->
+				current.ifPresent(sitemap -> // If a sitemap is selected.
 				{
+					// Create the progress window and start the scraper.
 					progressStage = new ProgressStage(current.get(), Math.min(current.get().getTasks().size(), NR_OF_DRIVERS));
 					scheduleScraper(sitemap,scrapeSettings,mongoDbHandler, progressStage.getRunnable());
 				});
@@ -175,9 +196,11 @@ public class SitemapController extends GridPane
 		add(runButtonVbox, 3, 3);
 		add(dataPreview,1,5);
 
+		// Update the fields when clicking on the sitemap list.
 		sitemapList.getSelectionModel().selectedItemProperty().addListener(l-> updateFields());
 
-		deleteButton.setOnAction(event -> {
+		deleteButton.setOnAction(event -> // Remove a sitemap.
+		{
 			SitemapHandler.removeSitemapFile(sitemapSourceDir,sitemapList.getSelectionModel().getSelectedItem().getName());
 			sitemaps.removeIf(s-> Objects.equals(s, sitemapList.getSelectionModel().getSelectedItem()));
 			sitemapList.setItems(FXCollections.observableArrayList(sitemaps));

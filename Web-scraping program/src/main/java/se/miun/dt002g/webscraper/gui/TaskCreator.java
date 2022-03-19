@@ -19,8 +19,12 @@ import se.miun.dt002g.webscraper.scraper.TextTask;
 
 import java.util.*;
 
+/**
+ * Window that allows for the creation of task chains.
+ */
 public class TaskCreator extends GridPane
 {
+	// The start and end of the CSS class that is added to all webpages.
 	private static final String CSS_START =
 			".selectedNode" +
 					"{" +
@@ -28,20 +32,18 @@ public class TaskCreator extends GridPane
 	private static final String CSS_END =
 			" !important; }";
 
-	private Node selectedNode = null;
-	private String selectedNodePreviousClass = null;
-	private List<Node> selectedNodes = null;
+	private Node selectedNode = null; // The currently selected node.
+	private String selectedNodePreviousClass = null; // The classes of the currently selected node.
+	private List<Node> selectedNodes = null; // The currently selected nodes.
 
-	private final Stack<Task> tasks;
-	private String lastestButtonPressed = "";
-	private boolean firstLoad = true;
+	private final Stack<Task> tasks; // Stack containing all tasks in the chain.
 
 	private WebView webView;
 
 	public TaskCreator(String url, Task editTask)
 	{
-		if (editTask == null) tasks = new Stack<>();
-		else tasks = taskToStack(editTask);
+		if (editTask == null) tasks = new Stack<>(); // If this is a new task chain.
+		else tasks = taskToStack(editTask); // If a task chain is to be edited.
 
 		setVgap(5);
 		setHgap(10);
@@ -91,9 +93,10 @@ public class TaskCreator extends GridPane
 		selectButton.setTooltip(new Tooltip("Press the button to enable element selection mode. " +
 				"When active, clicking on an element on the webpage will select it and fill the xPath field with the path to the element. " +
 				"Normal click events do not occur when element selection mode is active."));
+
 		selectButton.selectedProperty().addListener((observable, oldValue, newValue) ->
 		{
-			if (!newValue && selectedNode != null)
+			if (!newValue) // Deselect all selected nodes when quitting out of the selection mode.
 			{
 				deselectNodes();
 			}
@@ -135,30 +138,33 @@ public class TaskCreator extends GridPane
 
 		addButton.setOnAction(event ->
 		{
-			String taskType = ((RadioButton)typeGroup.getSelectedToggle()).getText();
+			String taskType = ((RadioButton)typeGroup.getSelectedToggle()).getText(); // Get the task type.
 
 			switch (taskType)
 			{
-				case "Text" ->
+				case "Text" -> // Text tasks.
 				{
 					String textPath = urlPathField.getText();
 					String id = idField.getText();
 					String dataName = nameField.getText();
 
+					// If only one node is selected.
 					if (textPath != null && !textPath.isEmpty() && selectedNodes == null)
 					{
 						TextTask textTask;
+						// If there are tasks already in the chain, add this task to the chain.
 						if (tasks.isEmpty()) textTask = new TextTask(textPath, id, dataName);
 						else textTask = new TextTask(textPath, tasks.peek(), id, dataName);
 						tasks.push(textTask);
 						taskList.setItems(FXCollections.observableArrayList(tasks));
 					}
-					else if (selectedNodes != null)
+					else if (selectedNodes != null) // If multiple nodes are selected.
 					{
-						for (int i = 0; i < selectedNodes.size(); i++)
+						for (int i = 0; i < selectedNodes.size(); i++) // Create a new task for each selected node.
 						{
 							textPath = NodeUtilities.getXPath(selectedNodes.get(i));
 							TextTask textTask;
+							// If there are tasks already in the chain, add this task to the chain.
 							if (tasks.isEmpty()) textTask = new TextTask(textPath, id+i, dataName);
 							else textTask = new TextTask(textPath, tasks.peek(), id+i, dataName);
 							tasks.push(textTask);
@@ -166,19 +172,21 @@ public class TaskCreator extends GridPane
 						taskList.setItems(FXCollections.observableArrayList(tasks));
 					}
 				}
-				case "Click" ->
+				case "Click" -> // Click tasks.
 				{
 					String clickPath = urlPathField.getText();
+					// If only one node is selected.
 					if (clickPath != null && !clickPath.isEmpty() && selectedNodes == null)
 					{
 						ClickTask clickTask;
+						// If there are tasks already in the chain, add this task to the chain.
 						if (tasks.isEmpty()) clickTask = new ClickTask(clickPath, "");
 						else clickTask = new ClickTask(clickPath, tasks.peek(), "");
 						tasks.push(clickTask);
 						taskList.setItems(FXCollections.observableArrayList(tasks));
 					}
 				}
-				case "Navigate" ->
+				case "Navigate" -> // Navigate tasks.
 				{
 					String navigateUrl = urlPathField.getText();
 					if (!navigateUrl.startsWith("http://") && !navigateUrl.startsWith("https://"))
@@ -189,13 +197,14 @@ public class TaskCreator extends GridPane
 					if (navigateUrl != null && !navigateUrl.isEmpty() && selectedNodes == null)
 					{
 						NavigateTask navigateTask;
+						// If there are tasks already in the chain, add this task to the chain.
 						if (tasks.isEmpty()) navigateTask = new NavigateTask(navigateUrl, "navigate");
 						else navigateTask = new NavigateTask(navigateUrl, tasks.peek(), "navigate");
 						tasks.push(navigateTask);
 						taskList.setItems(FXCollections.observableArrayList(tasks));
 
 
-						webView.getEngine().load(navigateUrl);
+						webView.getEngine().load(navigateUrl); // Load the new URL.
 					}
 				}
 			}
@@ -208,9 +217,9 @@ public class TaskCreator extends GridPane
 		{
 
 			WebHistory history = webView.getEngine().getHistory();
-			if (history.getCurrentIndex() != 0)
+			if (history.getCurrentIndex() != 0) // If there is history to go back to.
 			{
-
+				// Create a new NavigateTask that navigates to the previous page in the history.
 				NavigateTask navigateTask;
 				String backUrl = history.getEntries().get(history.getCurrentIndex() - 1).getUrl();
 				if (tasks.isEmpty()) navigateTask = new NavigateTask(backUrl, "back");
@@ -218,80 +227,64 @@ public class TaskCreator extends GridPane
 				tasks.push(navigateTask);
 				taskList.setItems(FXCollections.observableArrayList(tasks));
 
+				// Run the history.back() JS function on the browser.
 				Platform.runLater(() -> webView.getEngine().executeScript("history.back()"));
-				lastestButtonPressed = "back";
 			}
 		});
+
 		removeButton.setOnAction(event ->
 		{
-			if (!tasks.isEmpty())
+			if (!tasks.isEmpty()) // If there are tasks to remove.
 			{
 				Task task = tasks.pop();
-				/*if (task instanceof NavigateTask)
-				{
-					if (Objects.equals(task.id, "back"))
-					{
-						webView.getEngine().executeScript("window.history.forward()");
-					}
-					else if (Objects.equals(task.id, "navigate"))
-					{
-						webView.getEngine().executeScript("history.back()");
-					}
-				}*/
 				taskList.setItems(FXCollections.observableArrayList(tasks));
-				/*lastestButtonPressed = "remove";*/
 			}
 		});
-		/*webView.getEngine().locationProperty().addListener((observable, oldValue, newValue) ->
+
+		webView.getEngine().getLoadWorker().stateProperty().addListener((observable, oldValue, newValue) ->
 		{
-			if (!tasks.isEmpty() && !lastestButtonPressed.equals("remove"))
-			{
-				tasks.pop();
-
-				NavigateTask navigateTask;
-				if (tasks.isEmpty()) navigateTask = new NavigateTask(newValue, "navigate");
-				else navigateTask = new NavigateTask(newValue, tasks.peek(), "navigate");
-				tasks.push(navigateTask);
-				taskList.setItems(FXCollections.observableArrayList(tasks));
-			}
-		});*/
-
-		webView.getEngine().getLoadWorker().stateProperty().addListener((observable, oldValue, newValue) -> {
-			if (newValue == Worker.State.SUCCEEDED)
+			if (newValue == Worker.State.SUCCEEDED) // If the page has finished loading.
 			{
 				Document doc = webView.getEngine().getDocument();
+				// Create and add a style element with the custom selectedNode class.
 				Element styleNode = doc.createElement("style");
 				Text styleContent = doc.createTextNode(CSS_START + "cyan" + CSS_END);
 				styleNode.appendChild(styleContent);
 				doc.getDocumentElement().getElementsByTagName("head").item(0).appendChild(styleNode);
 
+				// Get a list of all elements in the page.
 				NodeList nodeList = webView.getEngine().getDocument().getElementsByTagName("*");
 
 				for (int i = 0; i < nodeList.getLength(); i++)
 				{
+					// Add an onClickListener to all nodes.
 					NodeUtilities.addOnclick(nodeList.item(i), evt ->
 					{
-						if (selectButton.isSelected())
+						if (selectButton.isSelected()) // If the "Select Element" button is active.
 						{
-							deselectNodes();
+							deselectNodes(); // Deselect all nodes.
 
+							// Add custom class to element.
 							selectedNode = (Node)evt.getTarget();
 							selectedNodePreviousClass = ((HTMLElement)selectedNode).getClassName();
 							((HTMLElement)selectedNode).setClassName(selectedNodePreviousClass + " selectedNode");
 
+							// Set the path field to the path of the node.
 							urlPathField.setText(NodeUtilities.getXPath((Node)evt.getTarget()));
+							// Stop the click from continuing up the event path.
 							evt.preventDefault();
 							evt.stopPropagation();
 						}
-						else
+						else // If element selection mode is not on.
 						{
-							lastestButtonPressed = "";
-							deselectNodes();
+							deselectNodes(); // Deselect all nodes.
 
+							// Create a new ClickTask clicking on what you clicked on.
 							ClickTask clickTask;
 							if (tasks.isEmpty()) clickTask = new ClickTask(NodeUtilities.getXPath((Node)evt.getTarget()), "");
 							else clickTask = new ClickTask(NodeUtilities.getXPath((Node)evt.getTarget()), tasks.peek(), "");
 
+							// Don't allow multiple ClickTasks clicking on the same thing in a row.
 							if (tasks.isEmpty() || !Objects.equals(tasks.peek().toString(), clickTask.toString()))
 							{
 								tasks.push(clickTask);
@@ -303,16 +296,16 @@ public class TaskCreator extends GridPane
 			}
 		});
 
-		saveButton.setOnAction(event ->
+		saveButton.setOnAction(event -> // Closes the window.
 		{
 			((Stage)getScene().getWindow()).close();
 		});
 
-		selectChildrenButton.setOnAction(event ->
+		selectChildrenButton.setOnAction(event -> // Select all child nodes.
 		{
 			if (selectedNode != null)
 			{
-				NodeList children = selectedNode.getChildNodes();
+				NodeList children = selectedNode.getChildNodes(); // Get all child nodes.
 				int nChildren = children.getLength();
 
 				if (nChildren > 0)
@@ -322,10 +315,11 @@ public class TaskCreator extends GridPane
 
 					for (int i = 0; i < nChildren; i++)
 					{
+						// Only add nodes that aren't of the type #text.
 						if (!children.item(i).getNodeName().equals("#text")) selectedNodes.add(children.item(i));
 					}
 
-					for (Node n : selectedNodes)
+					for (Node n : selectedNodes) // Add the selectedNode class to all selected nodes.
 					{
 						HTMLElement e = (HTMLElement)n;
 						e.setClassName(e.getClassName() + " selectedNode");
@@ -336,9 +330,9 @@ public class TaskCreator extends GridPane
 			}
 		});
 
-		selectSiblingsButton.setOnAction(event ->
+		selectSiblingsButton.setOnAction(event -> // Select add sibling nodes.
 		{
-			NodeList siblings = selectedNode.getParentNode().getChildNodes();
+			NodeList siblings = selectedNode.getParentNode().getChildNodes(); // Get all sibling nodes.
 			int nSiblings = siblings.getLength();
 
 			if (nSiblings > 0)
@@ -348,10 +342,11 @@ public class TaskCreator extends GridPane
 
 				for (int i = 0; i < nSiblings; i++)
 				{
+					// Only add nodes that aren't of the type #text.
 					if (!siblings.item(i).getNodeName().equals("#text")) selectedNodes.add(siblings.item(i));
 				}
 
-				for (Node n : selectedNodes)
+				for (Node n : selectedNodes) // Add the selectedNode class to all selected nodes.
 				{
 					HTMLElement e = (HTMLElement)n;
 					e.setClassName(e.getClassName() + " selectedNode");
@@ -361,29 +356,31 @@ public class TaskCreator extends GridPane
 			}
 		});
 
-		selectParentButton.setOnAction(event ->
+		selectParentButton.setOnAction(event -> // Select the parent node.
 		{
-			if (selectedNode != null)
+			if (selectedNode != null) // If only on node is selected.
 			{
-				Node n = selectedNode.getParentNode();
+				Node n = selectedNode.getParentNode(); // Get the parent node.
 				deselectNodes();
 				selectedNode = n;
+				// Add the selectedNode class to the parent node.
 				HTMLElement e = (HTMLElement)selectedNode;
 				e.setClassName(e.getClassName() + " selectedNode");
 				urlPathField.setText(NodeUtilities.getXPath(selectedNode));
 			}
-			else if (selectedNodes != null && selectedNodes.size() != 0)
+			else if (selectedNodes != null && selectedNodes.size() != 0) // If multiple nodes are selected.
 			{
-				Node n = selectedNodes.get(0).getParentNode();
+				Node n = selectedNodes.get(0).getParentNode(); // Get the parent node.
 				deselectNodes();
 				selectedNode = n;
+				// Add the selectedNode class to the parent node.
 				HTMLElement e = (HTMLElement)selectedNode;
 				e.setClassName(e.getClassName() + " selectedNode");
 				urlPathField.setText(NodeUtilities.getXPath(selectedNode));
 			}
 		});
 
-		goToRootButton.setOnAction(event ->
+		goToRootButton.setOnAction(event -> // Loads the root URL.
 		{
 			tasks.push(new NavigateTask(url, ""));
 			taskList.setItems(FXCollections.observableArrayList(tasks));
@@ -426,9 +423,12 @@ public class TaskCreator extends GridPane
 		});
 	}
 
+	/**
+	 * Deselects all selected nodes.
+	 */
 	private void deselectNodes()
 	{
-		if (selectedNode != null)
+		if (selectedNode != null) // Remove the custom class from the selected node.
 		{
 			HTMLElement e = (HTMLElement)selectedNode;
 			if (e != null && e.getClassName().contains("selectedNode"))
@@ -436,7 +436,7 @@ public class TaskCreator extends GridPane
 			selectedNode = null;
 		}
 
-		if (selectedNodes != null)
+		if (selectedNodes != null) // Remove the custom class from the selected nodes.
 		{
 			for (Node n : selectedNodes)
 			{
@@ -449,6 +449,11 @@ public class TaskCreator extends GridPane
 		}
 	}
 
+	/**
+	 * Turn a Task chain into a stack.
+	 * @param task The task chain.
+	 * @return A Stack containing the Tasks in the same order as in the Task chain.
+	 */
 	private Stack<Task> taskToStack(Task task)
 	{
 		Stack<Task> done = new Stack<>();
@@ -470,6 +475,10 @@ public class TaskCreator extends GridPane
 		return done;
 	}
 
+	/**
+	 * Get the Task chain.
+	 * @return The task chain.
+	 */
 	public Task getTask()
 	{
 		return tasks.isEmpty() ? null : tasks.peek();

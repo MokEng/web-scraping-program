@@ -34,14 +34,14 @@ test {
 
 javafx {
     version = "17"
-    modules = [ 'javafx.controls', 'javafx.web', 'javafx.fxml' ]
+    modules = [ 'javafx.controls', 'javafx.web' ]
 }
 
-mainClassName = "se.miun.dt002g.webscraper.gui.GUITest"
+mainClassName = "se.miun.dt002g.webscraper.gui.WebscrapingProgram"
 
 jar {
     manifest {
-        attributes "Main-Class": "se.miun.dt002g.webscraper.gui.GUITest"
+        attributes "Main-Class": "se.miun.dt002g.webscraper.gui.WebscrapingProgram"
     }
 
     from {

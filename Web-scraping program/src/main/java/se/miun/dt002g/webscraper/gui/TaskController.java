@@ -14,11 +14,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Window that displays and allows editing of the tasks in a sitemap.
+ */
 public class TaskController extends GridPane
 {
-	private final String baseURL;
+	private final String baseURL; // The base URL of the sitemap.
 	private final Sitemap sitemap;
-	private Task selectedTask;
+	private Task selectedTask; // The currently selected task.
 
 	public TaskController(String url, Sitemap sitemap)
 	{
@@ -32,8 +35,7 @@ public class TaskController extends GridPane
 		TextField baseURLField = new TextField();
 		baseURLField.setText(url);
 		baseURLField.setEditable(false);
-		Tooltip baseURLFieldTooltip = new Tooltip("The URL all tasks in the sitemap start from");
-		baseURLField.setTooltip(baseURLFieldTooltip);
+		baseURLField.setTooltip(new Tooltip("The URL all tasks in the sitemap start from"));
 
 		Button addButton = new Button("Add"),
 				editButton = new Button("Edit"),
@@ -42,18 +44,16 @@ public class TaskController extends GridPane
 		addButton.setMinWidth(50);
 		editButton.setMinWidth(50);
 		deleteButton.setMinWidth(50);
-		Tooltip addButtonTooltip = new Tooltip("Add new task"),
-				editButtonTooltip = new Tooltip("Edit task"),
-				deleteButtonTooltip = new Tooltip("Delete task");
-		addButton.setTooltip(addButtonTooltip);
-		editButton.setTooltip(editButtonTooltip);
-		deleteButton.setTooltip(deleteButtonTooltip);
+		addButton.setTooltip(new Tooltip("Add new task"));
+		editButton.setTooltip(new Tooltip("Edit task"));
+		deleteButton.setTooltip(new Tooltip("Delete task"));
 
 		VBox buttonVBox = new VBox(5, addButton, editButton, deleteButton);
 
 		ListView<Task> list = new ListView<>();
-		list.setItems(FXCollections.observableArrayList(sitemap.getTasks()));
-		addButton.setOnAction(event ->
+		list.setItems(FXCollections.observableArrayList(sitemap.getTasks())); // Add the tasks to the list.
+
+		addButton.setOnAction(event -> // Open the task creation window.
 		{
 			Stage addStage = new Stage();
 			addStage.setResizable(false);
@@ -65,18 +65,18 @@ public class TaskController extends GridPane
 			addStage.showAndWait();
 
 			Task createdTask = taskCreator.getTask();
-			if (createdTask != null)
+			if (createdTask != null) // If a task was created, add it to the list.
 			{
 				sitemap.addTask(createdTask);
 				list.setItems(FXCollections.observableArrayList(sitemap.getTasks()));
 			}
 		});
 
-		editButton.setOnAction(event ->
+		editButton.setOnAction(event -> // Open the task creation window with the currently selected task loaded.
 		{
 			Optional<Task> editTask = sitemap.getTasks().stream().filter(t -> Objects.equals(t, selectedTask)).findAny();
 
-			if (editTask.isPresent())
+			if (editTask.isPresent()) // If a task is selected.
 			{
 				List<Task> tasks = sitemap.getTasks();
 				tasks.remove(editTask.get());
@@ -91,7 +91,7 @@ public class TaskController extends GridPane
 				addStage.showAndWait();
 
 				Task newTask = taskCreator.getTask();
-				if (newTask != null) tasks.add(newTask);
+				if (newTask != null) tasks.add(newTask); // If a task was created, add it to the list.
 				list.setItems(FXCollections.observableArrayList(sitemap.getTasks()));
 				list.getSelectionModel().selectFirst();
 			}
@@ -101,7 +101,7 @@ public class TaskController extends GridPane
 		{
 			Optional<Task> removeTask = sitemap.getTasks().stream().filter(t -> Objects.equals(t, selectedTask)).findAny();
 
-			if (removeTask.isPresent())
+			if (removeTask.isPresent()) // Remove a task if it is selected.
 			{
 				List<Task> tasks = sitemap.getTasks();
 				tasks.remove(removeTask.get());

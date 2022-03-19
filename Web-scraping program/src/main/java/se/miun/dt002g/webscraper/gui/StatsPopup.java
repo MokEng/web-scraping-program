@@ -15,6 +15,9 @@ import javafx.stage.Stage;
 import java.time.Duration;
 import java.util.List;
 
+/**
+ * Window that displays the results of a scraping.
+ */
 public class StatsPopup
 {
 	public StatsPopup(int nBytesTotal, Duration timeTotal, List<String> tasks, List<Integer> nBytesPerTask, List<Duration> timePerTask)
@@ -41,6 +44,7 @@ public class StatsPopup
 		ObservableList<String> list = FXCollections.observableArrayList();
 		for (int i = 0; i < tasks.size(); i++)
 		{
+			// If the amount of bytes scraped is -1, add the [Failed] text at the end.
 			list.add(tasks.get(i) + (nBytesPerTask.get(i) == -1 ? " [Failed]" : ""));
 		}
 
@@ -48,6 +52,7 @@ public class StatsPopup
 
 		taskList.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) ->
 		{
+			// Show the number of bytes and seconds when selecting a task in the list.
 			int i = taskList.getSelectionModel().getSelectedIndex();
 			taskBytesText.setText("Bytes scraped: " + ((nBytesPerTask.get(i) == -1) ? 0 : nBytesPerTask.get(i)));
 			taskTimeText.setText("Scraping duration: " + timePerTask.get(i).getSeconds() + "." + timePerTask.get(i).toMillisPart() + " seconds");
@@ -64,6 +69,7 @@ public class StatsPopup
 		{
 			if (nBytesPerTask.get(i) != -1)
 			{
+				// Add the data from each task to the pie charts.
 				dataPieChart.getData().add(new PieChart.Data(tasks.get(i).substring(tasks.get(i).indexOf("(")+1, tasks.get(i).indexOf(",")), nBytesPerTask.get(i)));
 				timePieChart.getData().add(new PieChart.Data(tasks.get(i).substring(tasks.get(i).indexOf("(")+1, tasks.get(i).indexOf(",")), timePerTask.get(i).toMillis()));
 			}

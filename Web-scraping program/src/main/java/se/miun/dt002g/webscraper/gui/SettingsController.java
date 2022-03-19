@@ -25,9 +25,14 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.*;
 
+/**
+ * Window where the user can change program settings.
+ */
 public class SettingsController
 {
-	private final Map<String, String> webdriverNames = new HashMap<>() {{
+	// Maps the driver filenames to the browser names.
+	private final Map<String, String> webdriverNames = new HashMap<>()
+	{{
 		put("chromedriver", "Google Chrome");
 		put("msedgedriver", "Microsoft Edge");
 		put("IEDriverServer", "Internet Explorer");
@@ -35,13 +40,14 @@ public class SettingsController
 		put("safari", "Safari");
 	}};
 
-	private String defaultStorageLocation;
-	private ObservableList<String> exesInDir = null;
-	private final Map<String, String> settings;
+	private String defaultStorageLocation; // The local storage location.
+	private ObservableList<String> exesInDir = null; // Which driver executables are in the /drivers directory.
+	private final Map<String, String> settings; // Stores the settings.
 
 	public SettingsController(Map<String, String> settingsMap, MongoDbHandler mongoDbHandler)
 	{
 		settings = settingsMap;
+		// Get the storage location if it is set, otherwise default to the users default directory.
 		defaultStorageLocation = settings.containsKey("storageLocation") ? settings.get("storageLocation") : System.getProperty("user.dir");
 
 		Stage settingsStage = new Stage();
@@ -61,20 +67,19 @@ public class SettingsController
 		storageLocationLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
 		TextField storageLocationField = new TextField(defaultStorageLocation);
 		storageLocationField.setEditable(false);
-		Tooltip storageLocationFieldTooltip = new Tooltip("The location on you computer where the scraped data will be saved. " +
-				"Press the Open button to select a new location");
-		storageLocationField.setTooltip(storageLocationFieldTooltip);
+		storageLocationField.setTooltip(new Tooltip("The location on you computer where the scraped data will be saved. " +
+				"Press the Open button to select a new location"));
 		storageLocationField.setMinWidth(400);
 		Button selectDirectoryButton = new Button("Open");
-		Tooltip selectDirectoryButtonTooltip = new Tooltip("Click to select a new storage location");
-		selectDirectoryButton.setTooltip(selectDirectoryButtonTooltip);
-		selectDirectoryButton.setOnAction(event ->
+		selectDirectoryButton.setTooltip(new Tooltip("Click to select a new storage location"));
+		selectDirectoryButton.setOnAction(event -> // Choose a new local storage directory.
 		{
 			DirectoryChooser directoryChooser = new DirectoryChooser();
 			directoryChooser.setInitialDirectory(new File(defaultStorageLocation));
 
 			try
 			{
+				// Opens a window where you can select a directory.
 				defaultStorageLocation = directoryChooser.showDialog(new Stage()).getAbsolutePath();
 				storageLocationField.setText(defaultStorageLocation);
 				settings.put("storageLocation", defaultStorageLocation);
@@ -87,29 +92,35 @@ public class SettingsController
 		databaseLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
 		TextField connectionStringField = new TextField("");
 		connectionStringField.setMinWidth(60);
-		Tooltip connectionStringFieldTooltip = new Tooltip("Enter the connection string used to connect to your MongoDB database");
-		connectionStringField.setTooltip(connectionStringFieldTooltip);
+		connectionStringField.setTooltip(new Tooltip("Enter the connection string used to connect to your MongoDB database"));
 		Button tryConnectButton = new Button("Connect");
-		Tooltip tryConnectButtonTooltip = new Tooltip("Press to try to connect to MongoDB using the connection string");
-		tryConnectButton.setTooltip(tryConnectButtonTooltip);
+		tryConnectButton.setTooltip(new Tooltip("Press to try to connect to MongoDB using the connection string"));
 		Label connectMessageLabel = new Label("");
 
-		if(mongoDbHandler.isConnected()){
+		if(mongoDbHandler.isConnected()) // Whether the program is connected to the database or not.
+		{
 			connectMessageLabel.setText("Connected to database");
 			connectMessageLabel.setStyle("-fx-background-color: lightgreen;");
 			connectionStringField.setText(mongoDbHandler.getConnectionString());
-		}else{
+		}
+		else
+		{
 			connectMessageLabel.setText("Not connected to database");
 			connectMessageLabel.setStyle("-fx-background-color: red;");
 		}
 
-		tryConnectButton.setOnAction(event -> {
+		// Try to connect to MongoDB.
+		tryConnectButton.setOnAction(event ->
+		{
 			String text = connectionStringField.getText();
-			if(mongoDbHandler.tryConnect(text)){
+			if(mongoDbHandler.tryConnect(text))
+			{
 				connectMessageLabel.setText("Connected to database");
 				connectMessageLabel.setStyle("-fx-background-color: lightgreen;");
 				settings.put("dbConnection",text);
-			}else{
+			}
+			else
+			{
 				connectMessageLabel.setText("Connection failed");
 				connectMessageLabel.setStyle("-fx-background-color: red;");
 			}
@@ -120,13 +131,12 @@ public class SettingsController
 		Label webdriverLabel = new Label("Web Driver ");
 		webdriverLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px");
 		ComboBox<String> webdriverComboBox = new ComboBox<>();
-		Tooltip webDriverComboBoxTooltip = new Tooltip("Select the driver that will be used to scrape the data. " +
-				"You must have the browser that corresponds to the selected driver installed on your computer for the scraping to work");
-		webdriverComboBox.setTooltip(webDriverComboBoxTooltip);
+		webdriverComboBox.setTooltip(new Tooltip("Select the driver that will be used to scrape the data. " +
+				"You must have the browser that corresponds to the selected driver installed on your computer for the scraping to work"));
 		Hyperlink driversLink = new Hyperlink("Get more drivers");
-		Tooltip driversLinkTooltip = new Tooltip("Opens the Selenium webpage from where you can download more drivers");
-		driversLink.setTooltip(driversLinkTooltip);
-		driversLink.setOnAction(event ->
+		driversLink.setTooltip(new Tooltip("Opens the Selenium webpage from where you can download more drivers"));
+
+		driversLink.setOnAction(event -> // Opens a browser window to the Selenium driver download page, if opening browser windows is supported.
 		{
 			if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
 			{
@@ -140,10 +150,10 @@ public class SettingsController
 				}
 			}
 		});
+
 		Button openDriverDirectoryButton = new Button("Place drivers here");
-		Tooltip openDriverDirectoryButtonTooltip = new Tooltip("Opens the /drivers directory. Place the downloaded drivers in here.");
-		openDriverDirectoryButton.setTooltip(openDriverDirectoryButtonTooltip);
-		openDriverDirectoryButton.setOnAction(event ->
+		openDriverDirectoryButton.setTooltip(new Tooltip("Opens the /drivers directory. Place the downloaded drivers in here."));
+		openDriverDirectoryButton.setOnAction(event -> // Opens the drivers directory.
 		{
 			try
 			{
@@ -153,13 +163,14 @@ public class SettingsController
 		});
 		HBox driversHBox = new HBox(5, webdriverComboBox, driversLink, openDriverDirectoryButton);
 
-		getExesFromDriverDir();
-		webdriverComboBox.setItems(exesInDir);
+		getExesFromDriverDir(); // Get all driver executables in folder.
+		webdriverComboBox.setItems(exesInDir); // Set all available driver exes in combobox.
+		// If a driver is already in the settings, make that the selected one in the combobox.
 		if (settings.containsKey("driver")) webdriverComboBox.getSelectionModel().select(settings.get("driver"));
-		else webdriverComboBox.getSelectionModel().select(0);
+		else webdriverComboBox.getSelectionModel().select(0); // Otherwise, select the first one.
 		webdriverComboBox.valueProperty().addListener((observable, oldValue, newValue) ->
 		{
-			switch (newValue)
+			switch (newValue) // Sets the settings value to the correct driver.
 			{
 				case "Google Chrome" -> settings.put("driver", "chrome");
 				case "Mozilla Firefox" -> settings.put("driver", "firefox");
@@ -180,13 +191,13 @@ public class SettingsController
 		driverAmountSlider.setShowTickLabels(true);
 		driverAmountSlider.setShowTickMarks(true);
 		driverAmountSlider.setSnapToTicks(true);
+		// Adds the driver amount to the settings.
 		driverAmountSlider.valueProperty().addListener((observable, oldValue, newValue) ->
 				settings.put("threadAmount", Integer.toString((int) driverAmountSlider.getValue())));
-		Tooltip driverAmountSliderTooltip = new Tooltip("Select how many drivers will scrape data at the same time. " +
+		driverAmountSlider.setTooltip(new Tooltip("Select how many drivers will scrape data at the same time. " +
 				"Higher values should speed up scraping time. " +
 				"Higher values also lead to higher memory and CPU usage, and, depending on the structure and amount of tasks, " +
-				"a higher amount of drivers could slow down scraping time.");
-		driverAmountSlider.setTooltip(driverAmountSliderTooltip);
+				"a higher amount of drivers could slow down scraping time."));
 
 		// Local storage config
 		mainPane.add(settingsHeaderLabel, 0, 0, 3, 1);
@@ -211,22 +222,36 @@ public class SettingsController
 		settingsStage.showAndWait();
 	}
 
+	/**
+	 * Get the settings map.
+	 * @return Map that contains the settings values.
+	 */
 	public Map<String, String> getSettings() { return settings; }
 
+	/**
+	 * Searches the drivers directory and finds all driver executables.
+	 */
 	private void getExesFromDriverDir()
 	{
-		new File("drivers").mkdir();
+		new File("drivers").mkdir(); // Create the drivers directory if it does not exist.
 		File driverFolder = new File("drivers" + File.separator);
-		File[] files = driverFolder.listFiles();
+		File[] files = driverFolder.listFiles(); // Find all files in directory.
 
 		List<String> fileNames;
 		if (files == null || files.length == 0) fileNames = new ArrayList<>();
+		// Remove all files that are not one of the drivers from the webdriverNames map. Remove .exe file extension if we are no Windows.
 		else fileNames = Arrays.stream(files).map(File::getName).map(s -> s.replace(".exe", "")).filter(webdriverNames::containsKey).map(webdriverNames::get).toList();
 
 		exesInDir = FXCollections.observableArrayList(fileNames);
+		// Add Safari to the list if we are on Mac.
 		if (System.getProperty("os.name").toLowerCase().contains("mac")) exesInDir.add("Safari");
 	}
 
+	/**
+	 * Connect to the database.
+	 * @param connectionString The connection string.
+	 * @param mongoDbHandler The MongoDB handler.
+	 */
 	private void connectToDatabase(String connectionString, MongoDbHandler mongoDbHandler)
 	{
 		if(mongoDbHandler.tryConnect(connectionString))
@@ -239,13 +264,18 @@ public class SettingsController
 		}
 	}
 
+	/**
+	 * Save the settings to the settings.cfg file.
+	 * @param settings The map containing the settings.
+	 * @throws IOException If the file could not be created or opened.
+	 */
 	public static void saveSettings(@Nonnull Map<String, String> settings) throws IOException
 	{
 		File file = new File("settings.cfg");
 		if (file.createNewFile()) System.out.println("Created new settings file");
 		FileWriter fileWriter = new FileWriter(file);
 
-		for (Map.Entry<String, String> e : settings.entrySet())
+		for (Map.Entry<String, String> e : settings.entrySet()) // Writes all values to file.
 		{
 			fileWriter.write(e.getKey() + ": " + e.getValue() + "\n");
 		}
@@ -253,6 +283,11 @@ public class SettingsController
 		fileWriter.close();
 	}
 
+	/**
+	 * Load the settings from the settings.cfg file.
+	 * @param settings The map that will be filled with the settings values.
+	 * @return If the settings.cfg file was found or not.
+	 */
 	public static boolean loadSettings(@Nonnull Map<String, String> settings)
 	{
 		File file = new File("settings.cfg");

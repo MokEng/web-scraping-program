@@ -8,13 +8,16 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import se.miun.dt002g.webscraper.scraper.Pair;
-import se.miun.dt002g.webscraper.scraper.Sitemap;
 
 import java.util.List;
 
-public class ScheduledScrapersController {
-    ScheduledScrapersController(List<SitemapController.TimerService> scheduledList){
+/**
+ * Window that displays the scraping that are currently scheduled.
+ */
+public class ScheduledScrapersController
+{
+    ScheduledScrapersController(List<SitemapController.TimerService> scheduledList)
+    {
         Stage scheduleStage = new Stage();
         scheduleStage.initModality(Modality.APPLICATION_MODAL);
         scheduleStage.setTitle("Scheduled Scrapes");
@@ -27,11 +30,14 @@ public class ScheduledScrapersController {
         Label scheduledLabel = new Label("Scheduled Scrapes");
         scheduledLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
 
+        // List containing the scheduled scrapes.
         ListView<SitemapController.TimerService> scheduledScrapesList= new ListView<>();
         scheduledScrapesList.setItems(FXCollections.observableArrayList(scheduledList));
 
         Button deleteButton = new Button("Delete");
-        deleteButton.setOnAction(event -> {
+        deleteButton.setOnAction(event ->
+        {
+            // Cancel and delete a schedule scraping.
             scheduledScrapesList.getSelectionModel().getSelectedItem().cancel();
             scheduledList.remove(scheduledScrapesList.getSelectionModel().getSelectedItem());
             scheduledScrapesList.setItems(FXCollections.observableArrayList(scheduledList));
@@ -44,6 +50,5 @@ public class ScheduledScrapersController {
         scheduleStage.setScene(new Scene(mainPane));
         scheduleStage.sizeToScene();
         scheduleStage.showAndWait();
-
     }
 }

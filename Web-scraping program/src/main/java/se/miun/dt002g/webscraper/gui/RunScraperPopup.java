@@ -13,76 +13,78 @@ import se.miun.dt002g.webscraper.scraper.GROUPBY;
 import java.util.Map;
 import java.util.Objects;
 
-public class RunScraperPopup {
-    public boolean isRunScraper() {
-        return runScraper;
-    }
-
-    private boolean runScraper=false;
+/**
+ * Window that allows the user to select the run settings for the scraper and start the scraper.
+ */
+public class RunScraperPopup
+{
+    private boolean runScraper = false; // If the scraper should run.
     private final DbStorageSettings dbSettings = new DbStorageSettings();
-
     private final ScrapeSettings scrapeSettings = new ScrapeSettings();
 
-    public RunScraperPopup(String sitemapName,MongoDbHandler mongoDbHandler, Map<String,String> settings)
+    public RunScraperPopup(String sitemapName, MongoDbHandler mongoDbHandler, Map<String,String> settings)
     {
         GridPane mainPane = new GridPane();
         mainPane.setStyle("-fx-border-insets: 5px; -fx-padding: 5px;");
         mainPane.setVgap(10);
         mainPane.setHgap(5);
+
         Stage runScraperStage = new Stage();
         runScraperStage.setResizable(false);
         runScraperStage.initModality(Modality.APPLICATION_MODAL);
-        runScraperStage.setTitle("Run web scraper on "+sitemapName+" sitemap");
+        runScraperStage.setTitle("Run web scraper on " + sitemapName + " sitemap");
+
         Label chooseStorageLabel = new Label("Select where to save your data: ");
         Label dataFormatLabel  = new Label("Choose format for device storage: ");
         chooseStorageLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
         dataFormatLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
         RadioButton localButton = new RadioButton("Local Storage");
-        Tooltip localButtonTooltip = new Tooltip("Save the scraped data locally on your computer");
-        localButton.setTooltip(localButtonTooltip);
-        RadioButton databaseButton = new RadioButton("MongoDb");
-        Tooltip databaseButtonTooltip = new Tooltip("Save the scraped data on a MongoDB database");
-        databaseButton.setTooltip(databaseButtonTooltip);
+        localButton.setTooltip(new Tooltip("Save the scraped data locally on your computer"));
+        RadioButton databaseButton = new RadioButton("MongoDB");
+        databaseButton.setTooltip(new Tooltip("Save the scraped data on a MongoDB database"));
         Label dbIsConnectedLabel= new Label("");
-        if(!mongoDbHandler.isConnected()){
+
+        if(!mongoDbHandler.isConnected()) // Whether the program is connected to MongoDB or not.
+        {
             databaseButton.setDisable(true);
             dbIsConnectedLabel.setText("Not connected to database");
             dbIsConnectedLabel.setStyle("-fx-background-color: red;");
-        }else{
+        }
+        else
+        {
             dbIsConnectedLabel.setText("Connected");
             dbIsConnectedLabel.setStyle("-fx-background-color: lightgreen;");
         }
 
+        // Data format.
         ChoiceBox<String> formatPicker = new ChoiceBox<>();
         formatPicker.getItems().add(DATA_FORMAT.json.name());
         formatPicker.getItems().add(DATA_FORMAT.csv.name());
         formatPicker.getSelectionModel().select(0);
-        Tooltip formatPickerTooltip = new Tooltip("Select the format used to save the data");
-        formatPicker.setTooltip(formatPickerTooltip);
+        formatPicker.setTooltip(new Tooltip("Select the format used to save the data"));
 
+        // Data grouping.
         Label groupByLabel = new Label("Select way to group the data: ");
         ChoiceBox<String> groupPicker = new ChoiceBox<>();
         groupPicker.getItems().add(GROUPBY.id.name());
         groupPicker.getItems().add(GROUPBY.dataName.name());
         groupPicker.getSelectionModel().select(0);
-        Tooltip groupPickerTooltip = new Tooltip("Select how to group the data");
-        groupPicker.setTooltip(groupPickerTooltip);
+        groupPicker.setTooltip(new Tooltip("Select how to group the data"));
 
         Label databaseSettingsLabel = new Label("Database Settings");
         databaseSettingsLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
 
+        // Database name.
         Label databaseNameLabel = new Label("Database: ");
         TextField databaseNameTextField= new TextField(settings.get("latestDb"));
-        Tooltip databaseNameTextFieldTooltip = new Tooltip("The name of the database");
-        databaseNameTextField.setTooltip(databaseNameTextFieldTooltip);
+        databaseNameTextField.setTooltip(new Tooltip("The name of the database"));
 
+        // Collection name.
         Label collectionNameLabel = new Label("Collection: ");
         TextField collectionNameTextField = new TextField(settings.get("latestColl"));
-        Tooltip collectionNameTextFieldTooltip = new Tooltip("The name of the collection to store the data in");
-        collectionNameTextField.setTooltip(collectionNameTextFieldTooltip);
+        collectionNameTextField.setTooltip(new Tooltip("The name of the collection to store the data in"));
         RadioButton dropPreviousData = new RadioButton("Drop previous data in collection");
-        Tooltip dropPreviousDataTooltip = new Tooltip("If the data currently in the collection should be deleted before the new data is inserted");
-        dropPreviousData.setTooltip(dropPreviousDataTooltip);
+        dropPreviousData.setTooltip(new Tooltip("If the data currently in the collection should be deleted before the new data is inserted"));
 
         Button runButton = new Button("Run");
         Button cancelButton = new Button("Cancel");
@@ -112,44 +114,77 @@ public class RunScraperPopup {
         mainPane.add(runButton,0,8);
         mainPane.add(cancelButton,1,8);
 
+        // Runs when the run button is pressed.
         runButton.setOnAction(event1 -> {
 
             scrapeSettings.saveLocal = localButton.isSelected();
             scrapeSettings.saveDb = databaseButton.isSelected();
-            if(Objects.equals(formatPicker.getSelectionModel().getSelectedItem(), DATA_FORMAT.json.name())){
+
+            // Get the data format.
+            if(Objects.equals(formatPicker.getSelectionModel().getSelectedItem(), DATA_FORMAT.json.name()))
+            {
                 scrapeSettings.dataFormat = DATA_FORMAT.json;
-            }else{
+            }
+            else
+            {
                 scrapeSettings.dataFormat = DATA_FORMAT.csv;
             }
-            if(Objects.equals(groupPicker.getSelectionModel().getSelectedItem(), GROUPBY.id.name())){
+
+            // Get the data grouping.
+            if(Objects.equals(groupPicker.getSelectionModel().getSelectedItem(), GROUPBY.id.name()))
+            {
                 scrapeSettings.groupby = GROUPBY.id;
-            }else{
+            }
+            else
+            {
                 scrapeSettings.groupby = GROUPBY.dataName;
             }
+
+            // Get database settings.
             dbSettings.dropPreviousData = dropPreviousData.isSelected();
             dbSettings.collectionName = collectionNameTextField.getText();
             dbSettings.databaseName = databaseNameTextField.getText();
 
             settings.put("latestDb",databaseNameTextField.getText());
             settings.put("latestColl",collectionNameTextField.getText());
-            if ((scrapeSettings.saveLocal || scrapeSettings.saveDb)) {
+
+            if ((scrapeSettings.saveLocal || scrapeSettings.saveDb)) // If either or both of the storage options are active.
+            {
+                // Signal that the scraper should start and close the window.
                 runScraper = true;
                 runScraperStage.close();
             }
         });
-        cancelButton.setOnAction(event -> {
+
+        // Runs when the cancel button is pressed.
+        cancelButton.setOnAction(event ->
+        {
+            // Signal that the scraper should not start and close the window.
             runScraper=false;
             runScraperStage.close();
         });
+
         mainPane.setStyle("-fx-border-insets: 5px; -fx-padding: 5px; -fx-label-padding: 10px;");
         runScraperStage.setScene(new Scene(mainPane));
         runScraperStage.showAndWait();
     }
 
-
-    public ScrapeSettings getScrapeSettings() {
+    /**
+     * Get the scraper settings.
+     * @return The settings the scraper should use.
+     */
+    public ScrapeSettings getScrapeSettings()
+    {
         scrapeSettings.dbStorageSettings = dbSettings;
         return scrapeSettings;
+    }
+
+    /**
+     * Get if the scraper should run.
+     * @return If the scraper should run.
+     */
+    public boolean isRunScraper() {
+        return runScraper;
     }
 }
 
