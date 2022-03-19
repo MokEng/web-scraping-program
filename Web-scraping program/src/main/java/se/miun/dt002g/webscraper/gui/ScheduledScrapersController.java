@@ -16,7 +16,7 @@ import java.util.List;
  */
 public class ScheduledScrapersController
 {
-    ScheduledScrapersController(List<SitemapController.TimerService> scheduledList)
+    ScheduledScrapersController(List<TimerService> scheduledList)
     {
         Stage scheduleStage = new Stage();
         scheduleStage.initModality(Modality.APPLICATION_MODAL);
@@ -31,7 +31,7 @@ public class ScheduledScrapersController
         scheduledLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
 
         // List containing the scheduled scrapes.
-        ListView<SitemapController.TimerService> scheduledScrapesList= new ListView<>();
+        ListView<TimerService> scheduledScrapesList= new ListView<>();
         scheduledScrapesList.setItems(FXCollections.observableArrayList(scheduledList));
 
         Button deleteButton = new Button("Delete");
