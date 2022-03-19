@@ -17,6 +17,10 @@ import org.bson.Document;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Handles the applications connection to
+ * the MongoDb cluster
+ */
 public class MongoDbHandler {
     com.mongodb.client.MongoClient client;
     public String getConnectionString() {
@@ -26,14 +30,21 @@ public class MongoDbHandler {
     String connectionString = null;
     boolean isConnected = false;
 
+    /**
+     * Tries to connect to a MongoDb cluster.
+     * @param connectionString, https://docs.mongodb.com/manual/reference/connection-string/
+     * @return true if 'client' is connected to a MongoDb cluster.
+     */
     public boolean tryConnect(String connectionString){
-        if(client!=null){
+        if(client!=null){ // close previous connection
             client.close();
         }
         try{
+            // Create new client connection
             client = MongoClients.create(MongoClientSettings.builder()
                     .applyConnectionString(new ConnectionString(connectionString))
-                    .applyToServerSettings(builder -> builder.addServerMonitorListener(new ServerMonitorListener() {
+                    .applyToServerSettings(builder -> builder.addServerMonitorListener(
+                            new ServerMonitorListener() { // add monitoring of connection
                         @Override
                         public void serverHearbeatStarted(ServerHeartbeatStartedEvent event) {
                             isConnected = true;
@@ -49,7 +60,7 @@ public class MongoDbHandler {
                             isConnected = false;
                         }
                     })).build());
-            // Temporary until I figure out how to check if credentials are OK.
+            // Test if connected client has rights to write to the database
             MongoDatabase database = client.getDatabase("test");
             MongoCollection<Document> coll = database.getCollection("test");
             coll.drop();
@@ -74,6 +85,12 @@ public class MongoDbHandler {
         return isConnected;
     }
 
+    /**
+     * Stores a list of json-formatted strings to the connected client.
+     * @param settings, specifies where to store the data within the connected cluster
+     * @param jsonStrings, the data to be saved
+     * @return true if the data has successfully been stored in the database-cluster
+     */
     public boolean storeJsonInDb(DbStorageSettings settings, List<String> jsonStrings){
 
         try{
