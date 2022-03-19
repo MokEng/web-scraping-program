@@ -4,6 +4,7 @@ import java.util.List;
 
 /**
  * Class that hold data for several TextData objects along with an identifier.
+ * Is converted into JSON format with Gson.
  */
 public class Data {
     String groupedBy;

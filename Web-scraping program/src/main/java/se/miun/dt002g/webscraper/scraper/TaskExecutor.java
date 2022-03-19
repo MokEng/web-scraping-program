@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Executes all Task-objects given in constructor.
+ */
 class TaskExecutor implements Callable<Void> {
     private final List<Task> tasks;
     private final WebDriver driver;
@@ -26,6 +29,7 @@ class TaskExecutor implements Callable<Void> {
             try{
                 task.run(driver);
             }catch(Exception ignored){}
+            // calculate run-time for a specific Task(-chain)
             times.add(new AtomicReference<>(Duration.between(before, Instant.now())));
             driver.navigate().to(root);
         }

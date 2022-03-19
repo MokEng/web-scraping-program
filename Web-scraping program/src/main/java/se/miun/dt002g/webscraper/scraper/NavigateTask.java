@@ -3,7 +3,7 @@ package se.miun.dt002g.webscraper.scraper;
 import org.openqa.selenium.WebDriver;
 
 /**
- * Task for navigating a webdriver to a new url
+ * Task for navigating a webdriver to a new url.
  */
 public class NavigateTask extends Task
 {
@@ -22,8 +22,7 @@ public class NavigateTask extends Task
 	}
 
 	@Override
-	void execute(WebDriver driver) throws Exception
-	{
+	void execute(WebDriver driver) {
 		driver.navigate().to(url);
 	}
 

@@ -2,6 +2,11 @@ package se.miun.dt002g.webscraper.scraper;
 
 import java.io.Serializable;
 
+/**
+ * Serializable class for Pairing two different objects.
+ * @param <T>
+ * @param <S>
+ */
 public final class Pair<T, S> implements Serializable {
     public final T first;
     public final S second;

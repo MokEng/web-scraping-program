@@ -14,11 +14,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-;
+/**
+ * Static class for converting and grouping data stored in
+ * TextTask objects.
+ */
 public class DataHandler {
     /**
-     * Get all tasks in sitemap, even the ones hidden with decorator pattern.
-     * @return a list of data strings extracted from the web
+     * Get all TextTask objects from a sitemap, even the ones hidden with decorator pattern.
+     * @param sitemap, the sitemap that holds Task objects.
+     * @return a list of TextTask-objects
      */
     private static List<TextTask> getAllTextTasks(Sitemap sitemap){
         List<TextTask> allTasks= new ArrayList<>();
@@ -39,7 +43,7 @@ public class DataHandler {
      * Groups Task-objects with a key-value
      * @param groupby, what variable to base the grouping on
      * @param sitemap, tasks are found in sitemap
-     * @return a Map object which groups Task-objects to a key.
+     * @return a Map which groups TextTask-objects to a key.
      */
     private static Map<String,List<TextTask>> groupTextTasksBy(GROUPBY groupby,Sitemap sitemap){
         List<TextTask> all = getAllTextTasks(sitemap);
@@ -55,7 +59,7 @@ public class DataHandler {
     }
 
     /**
-     * Converts and groups data from Task objects to JSON-format.
+     * Converts and groups data from Task objects to JSON-format using Gson library.
      * @param groupby, what to group the data by
      * @param sitemap, The sitemap which holds the Task objects
      * @return a list of strings in JSON format.
@@ -69,7 +73,7 @@ public class DataHandler {
         return jsons;
     }
     /**
-     * Converts and groups data from Task objects to JSON-format.
+     * Converts and groups data from TextTask objects to JSON-format using Gson library
      * @param groupby, what to group the data by
      * @param sitemap, The sitemap which holds the Task objects
      * @return a string in JSON format.
@@ -94,9 +98,10 @@ public class DataHandler {
     }
 
     /**
-     * Writes and groups scraped data from Task-objects to a file in JSON format
+     * Writes and groups scraped data from TextTask-objects to a file in JSON format
+     * using Gson library.
      * @param groupby, what to group the data by
-     * @param sitemap, the sitemap containing the tasks
+     * @param sitemap, the sitemap containing the Task-objects
      * @param filename, output file path
      * @return true if write was successful
      */
@@ -111,6 +116,14 @@ public class DataHandler {
         return true;
     }
 
+    /**
+     * Writes and groups scraped data from TextTask-objects to a file in CSV format
+     * using JSON2Flat library
+     * @param groupby, what to group the data by
+     * @param sitemap, the sitemap containing the Task-objects
+     * @param filename, output file path
+     * @return true if write was successful
+     */
     public static boolean toCSVFile(GROUPBY groupby, Sitemap sitemap, String filename) {
         String jsonstring = toJSON(groupby,sitemap);
         JFlat flatMe = new JFlat(jsonstring);

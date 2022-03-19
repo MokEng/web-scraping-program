@@ -14,7 +14,7 @@ public class TextTask extends Task
 {
 	public final String xPathToElement; // path to the element which inner HTML should be scraped.
 	public String data; // the extracted data
-	public String dataName; // key to find the data;
+	public String dataName; // key to label the data;
 
 	public TextTask(String xPathToElement, String id, String dataName)
 	{
@@ -31,8 +31,7 @@ public class TextTask extends Task
 	}
 
 	@Override
-	void execute(WebDriver driver) throws Exception
-	{
+	void execute(WebDriver driver) {
 		// get inner html of the element
 		data = new WebDriverWait(driver, Duration.ofSeconds(5))
 				.until(ExpectedConditions.presenceOfElementLocated(By.xpath(xPathToElement))).getText();

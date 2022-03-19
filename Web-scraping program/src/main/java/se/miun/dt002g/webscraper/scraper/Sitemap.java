@@ -15,10 +15,15 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Manages and executes a List of Task-objects.
+ *
+ */
 public class Sitemap implements Serializable {
     private List<Task> tasks = new ArrayList<>();
     private final String rootUrl; // all drivers run from Sitemap starts scraping from rootUrl;
-    private String name;
+    private String name; // the sitemap name
+    // Variables for gathering statistics about a completed scrape.
     private final List<List<AtomicReference<Duration>>> times;
     private int totalBytes = 0;
     private final List<Integer> bytesPerTask;
@@ -58,23 +63,15 @@ public class Sitemap implements Serializable {
     public boolean addTask(Task task){
         return tasks.add(task);
     }
-    public void runScraper(){
-        WebDriver driver = new ChromeDriver();
-        driver.manage().window().minimize();
-        driver.navigate().to(rootUrl);
-        running = true;
-        tasks.forEach(p-> { // run all tasks in list
-            try {
-                p.run(driver);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-        driver.close();
-        running =false;
-    }
 
-    public void runMultiThreadedScraper(int nrOfDrivers, Runnable runOnTaskFinish,String webDriverName) throws ExecutionException, InterruptedException {
+    /**
+     * Run every task in the tasks-list.
+     * @param nrOfDrivers, NO drivers to use
+     * @param runOnTaskFinish, Runnable to be executed when scraping has completed
+     * @param webDriverName, what webdriver should be used for scraping the data
+     * @throws InterruptedException
+     */
+    public void runMultiThreadedScraper(int nrOfDrivers, Runnable runOnTaskFinish,String webDriverName) throws InterruptedException {
         if(tasks.isEmpty()){
             return;
         }
@@ -97,20 +94,20 @@ public class Sitemap implements Serializable {
             List<AtomicReference<Duration>> time = new ArrayList<>();
             Callable<Void> callable = new TaskExecutor(partitionOfTasks,driver, time); // new callable for executing tasks
             times.add(time);
-            completionService.submit(callable);
+            completionService.submit(callable); // submit to executor
         }
 
         int driversLeft = nrOfDrivers;
         while (driversLeft > 0)
         {
-            completionService.take();
+            completionService.take(); // take next finished callable
             if (runOnTaskFinish != null) Platform.runLater(runOnTaskFinish);
             driversLeft--;
         }
         pool.shutdown(); // destroy thread-pool
 
 
-        tasks.forEach(p-> {
+        tasks.forEach(p-> { // calculate size of fetched data and save to instance variables
             Task t = p;
             int bytesPerChain = 0;
             while (t != null) {
@@ -129,6 +126,9 @@ public class Sitemap implements Serializable {
         });
     }
 
+    /**
+     * Clear all data from all Task-objects in tasks-list
+     */
     public void clearData(){
         totalBytes = 0;
         bytesPerTask.clear();
@@ -155,6 +155,10 @@ public class Sitemap implements Serializable {
         this.tasks = tasks;
     }
 
+    /**
+     * Fetch all times from the latest execution
+     * @return list of Duration-objects
+     */
     public List<AtomicReference<Duration>> getTimes()
     {
         List<AtomicReference<Duration>> temp = new ArrayList<>();
@@ -177,7 +181,11 @@ public class Sitemap implements Serializable {
         return bytesPerTask;
     }
 
-
+    /**
+     * Return WebDriver based on parameter
+     * @param webDriverName, name of WebDriver
+     * @return the WebDriver mapped to the input string
+     */
     private WebDriver getWebdriverOfChoice(String webDriverName){
 
         WebDriver driver;

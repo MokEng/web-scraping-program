@@ -29,10 +29,10 @@ public class ClickTask extends Task
 	}
 
 	@Override
-	void execute(WebDriver driver) throws Exception
-	{
+	void execute(WebDriver driver) {
 		// Use javascript to click an element on the current webpage
 		JavascriptExecutor js = (JavascriptExecutor) driver;
+		// Wait for element to appear in 5 seconds
 		WebElement element = new WebDriverWait(driver, Duration.ofSeconds(5))
 				.until(ExpectedConditions.presenceOfElementLocated(By.xpath(xPathToElement)));
 		js.executeScript("arguments[0].click();", element);
