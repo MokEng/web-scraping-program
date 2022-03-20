@@ -1,29 +1,12 @@
-# README #
+# Web-scraping Program #
 
-This README would normally document whatever steps are necessary to get your application up and running.
-
-### What is this repository for? ###
-
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+This repository contains a basic web-scraping application made in Java, using JavaFX and Selenium, made during the course DT002G at Mid Sweden University.
+The program allows for scraping text off websites, multithreaded scraping, and scheduling of scraping tasks.
 
 ### How do I get set up? ###
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
-
-### Contribution guidelines ###
-
-* Writing tests
-* Code review
-* Other guidelines
-
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
+* Clone or download the repository.
+* Navigate to the /Web-scraping program directory
+* Use `gradlew build` to build the project.
+* Use `gradlew run` to run the project.
+* Use `gradlew bootJar` to create a runnable .jar-file of the project. In order to make the "Help" menu work correctly, copy the /help directory into the same directory as the .jar-file.
